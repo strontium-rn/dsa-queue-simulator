@@ -89,7 +89,7 @@ cmake --build . --config Release
 cmake --install . --prefix ../../SDL3_install
 ```
 
-I am using my absolute path you use yours 
+
 
 
 
