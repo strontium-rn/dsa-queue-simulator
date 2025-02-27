@@ -31,7 +31,7 @@ public:
     // Render a single frame
     void renderFrame();
 
-    // Clean up resources
+    // Clean up resource
     void cleanup();
 
     // Check if rendering is active
