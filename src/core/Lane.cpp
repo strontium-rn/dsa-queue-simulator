@@ -7,7 +7,7 @@
 Lane::Lane(char laneId, int laneNumber)
     : laneId(laneId),
       laneNumber(laneNumber),
-      isPriority(laneId == 'A' && laneNumber == 2), // AL2 is the priority lane
+      isPriority(laneId == 'A' && laneNumber == 2), // AL2 is the priority lane yes sirr
       priority(0) {
 
     std::ostringstream oss;
