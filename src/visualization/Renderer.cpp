@@ -1,4 +1,4 @@
-// FILE: src/visualization/Renderer.cpp
+// FILE: src/visualization/Renderer.cpp workswell
 #include "visualization/Renderer.h"
 #include "core/Lane.h"
 #include "core/Vehicle.h"
@@ -163,7 +163,7 @@ void Renderer::renderFrame() {
     }
 
     // Clear screen
-    SDL_SetRenderDrawColor(renderer, 25, 25, 35, 255); // Dark blue-ish background
+    SDL_SetRenderDrawColor(renderer, 40, 40, 40, 255); // Darker background
     SDL_RenderClear(renderer);
 
     // Draw roads and lanes
@@ -190,6 +190,7 @@ void Renderer::renderFrame() {
     lastFrameTime = SDL_GetTicks();
 }
 
+
 void Renderer::drawRoadsAndLanes() {
     const int ROAD_WIDTH = Constants::ROAD_WIDTH;
     const int LANE_WIDTH = Constants::LANE_WIDTH;
@@ -197,31 +198,64 @@ void Renderer::drawRoadsAndLanes() {
     const int CENTER_Y = windowHeight / 2;
 
     // ---------- STEP 1: BACKGROUND ----------
-    // Draw dark background for the entire window
-    SDL_SetRenderDrawColor(renderer, 25, 25, 35, 255); // Dark blue-ish background
+    // Draw dark gray background for the entire window
+    SDL_SetRenderDrawColor(renderer, 40, 40, 40, 255);
     SDL_RenderClear(renderer);
 
-    // Draw city blocks in corners (buildings)
-    drawCityBlocks();
+    // Draw grass areas in corners (to highlight road areas)
+    SDL_SetRenderDrawColor(renderer, 30, 100, 30, 255);  // Dark green grass
+
+    // Top-left grass
+    SDL_FRect grassTL = {
+        0, 0,
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2)
+    };
+    SDL_RenderFillRect(renderer, &grassTL);
+
+    // Top-right grass
+    SDL_FRect grassTR = {
+        static_cast<float>(CENTER_X + ROAD_WIDTH/2), 0,
+        static_cast<float>(windowWidth - (CENTER_X + ROAD_WIDTH/2)),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2)
+    };
+    SDL_RenderFillRect(renderer, &grassTR);
+
+    // Bottom-left grass
+    SDL_FRect grassBL = {
+        0, static_cast<float>(CENTER_Y + ROAD_WIDTH/2),
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2),
+        static_cast<float>(windowHeight - (CENTER_Y + ROAD_WIDTH/2))
+    };
+    SDL_RenderFillRect(renderer, &grassBL);
+
+    // Bottom-right grass
+    SDL_FRect grassBR = {
+        static_cast<float>(CENTER_X + ROAD_WIDTH/2),
+        static_cast<float>(CENTER_Y + ROAD_WIDTH/2),
+        static_cast<float>(windowWidth - (CENTER_X + ROAD_WIDTH/2)),
+        static_cast<float>(windowHeight - (CENTER_Y + ROAD_WIDTH/2))
+    };
+    SDL_RenderFillRect(renderer, &grassBR);
 
     // ---------- STEP 2: DRAW BASE ROADS ----------
-    // Draw horizontal road (dark asphalt)
-    SDL_SetRenderDrawColor(renderer, 40, 40, 45, 255); // Darker asphalt
+    // Draw horizontal road (mid-gray)
+    SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
     SDL_FRect horizontalRoad = {
         0, static_cast<float>(CENTER_Y - ROAD_WIDTH/2),
         static_cast<float>(windowWidth), static_cast<float>(ROAD_WIDTH)
     };
     SDL_RenderFillRect(renderer, &horizontalRoad);
 
-    // Draw vertical road (dark asphalt)
+    // Draw vertical road (mid-gray)
     SDL_FRect verticalRoad = {
         static_cast<float>(CENTER_X - ROAD_WIDTH/2), 0,
         static_cast<float>(ROAD_WIDTH), static_cast<float>(windowHeight)
     };
     SDL_RenderFillRect(renderer, &verticalRoad);
 
-    // Draw intersection
-    SDL_SetRenderDrawColor(renderer, 35, 35, 40, 255);
+    // Draw intersection (slightly darker)
+    SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
     SDL_FRect intersection = {
         static_cast<float>(CENTER_X - ROAD_WIDTH/2),
         static_cast<float>(CENTER_Y - ROAD_WIDTH/2),
@@ -230,1121 +264,886 @@ void Renderer::drawRoadsAndLanes() {
     };
     SDL_RenderFillRect(renderer, &intersection);
 
-    // Draw road texture (subtle pattern)
-    drawRoadTexture();
-
-    // ---------- STEP 3: DRAW LANES WITH GLOWING MARKERS ----------
+    // ---------- STEP 3: DRAW LANES WITH DISTINCT COLORS ----------
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-    // Draw lane dividers with glow effect
-    drawLaneDividers();
+    // --- ROAD A (NORTH) ---
+    // A1 - Incoming lane (light blue with direction indicator)
+    SDL_SetRenderDrawColor(renderer, 30, 144, 255, 80); // Light blue transparent
+    SDL_FRect laneA1 = {
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2),
+        0,
+        static_cast<float>(LANE_WIDTH),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2)
+    };
+    SDL_RenderFillRect(renderer, &laneA1);
 
-    // Draw traffic lane indicators
-    drawLaneIndicators();
+    // A2 - Priority lane (orange with priority indicator)
+    SDL_SetRenderDrawColor(renderer, 255, 140, 0, 80); // Orange transparent
+    SDL_FRect laneA2 = {
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH),
+        0,
+        static_cast<float>(LANE_WIDTH),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2)
+    };
+    SDL_RenderFillRect(renderer, &laneA2);
 
-    // ---------- STEP 4: DRAW CROSSWALKS ----------
-    drawCrosswalks();
+    // A3 - Free lane (green with free lane indicator)
+    SDL_SetRenderDrawColor(renderer, 50, 205, 50, 80); // Lime green transparent
+    SDL_FRect laneA3 = {
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2 + 2*LANE_WIDTH),
+        0,
+        static_cast<float>(LANE_WIDTH),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2)
+    };
+    SDL_RenderFillRect(renderer, &laneA3);
 
-    // ---------- STEP 5: DRAW STOP LINES ----------
-    drawStopLines();
+    // --- ROAD B (EAST) ---
+    // B1 - Incoming lane (light blue)
+    SDL_SetRenderDrawColor(renderer, 30, 144, 255, 80);
+    SDL_FRect laneB1 = {
+        static_cast<float>(CENTER_X + ROAD_WIDTH/2),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2),
+        static_cast<float>(windowWidth - (CENTER_X + ROAD_WIDTH/2)),
+        static_cast<float>(LANE_WIDTH)
+    };
+    SDL_RenderFillRect(renderer, &laneB1);
+
+    // B2 - Normal lane (light yellow)
+    SDL_SetRenderDrawColor(renderer, 218, 165, 32, 80); // Goldenrod transparent
+    SDL_FRect laneB2 = {
+        static_cast<float>(CENTER_X + ROAD_WIDTH/2),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2 + LANE_WIDTH),
+        static_cast<float>(windowWidth - (CENTER_X + ROAD_WIDTH/2)),
+        static_cast<float>(LANE_WIDTH)
+    };
+    SDL_RenderFillRect(renderer, &laneB2);
+
+    // B3 - Free lane (green)
+    SDL_SetRenderDrawColor(renderer, 34, 139, 34, 80); // Forest green transparent
+    SDL_FRect laneB3 = {
+        static_cast<float>(CENTER_X + ROAD_WIDTH/2),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2 + 2*LANE_WIDTH),
+        static_cast<float>(windowWidth - (CENTER_X + ROAD_WIDTH/2)),
+        static_cast<float>(LANE_WIDTH)
+    };
+    SDL_RenderFillRect(renderer, &laneB3);
+
+    // --- ROAD C (SOUTH) ---
+    // C1 - Incoming lane (light blue)
+    SDL_SetRenderDrawColor(renderer, 30, 144, 255, 80);
+    SDL_FRect laneC1 = {
+        static_cast<float>(CENTER_X + LANE_WIDTH),
+        static_cast<float>(CENTER_Y + ROAD_WIDTH/2),
+        static_cast<float>(LANE_WIDTH),
+        static_cast<float>(windowHeight - (CENTER_Y + ROAD_WIDTH/2))
+    };
+    SDL_RenderFillRect(renderer, &laneC1);
+
+    // C2 - Normal lane (light brown)
+    SDL_SetRenderDrawColor(renderer, 210, 105, 30, 80); // Chocolate transparent
+    SDL_FRect laneC2 = {
+        static_cast<float>(CENTER_X),
+        static_cast<float>(CENTER_Y + ROAD_WIDTH/2),
+        static_cast<float>(LANE_WIDTH),
+        static_cast<float>(windowHeight - (CENTER_Y + ROAD_WIDTH/2))
+    };
+    SDL_RenderFillRect(renderer, &laneC2);
+
+    // C3 - Free lane (green)
+    SDL_SetRenderDrawColor(renderer, 60, 179, 113, 80); // Medium sea green transparent
+    SDL_FRect laneC3 = {
+        static_cast<float>(CENTER_X - LANE_WIDTH),
+        static_cast<float>(CENTER_Y + ROAD_WIDTH/2),
+        static_cast<float>(LANE_WIDTH),
+        static_cast<float>(windowHeight - (CENTER_Y + ROAD_WIDTH/2))
+    };
+    SDL_RenderFillRect(renderer, &laneC3);
+
+    // --- ROAD D (WEST) ---
+    // D1 - Incoming lane (light blue)
+    SDL_SetRenderDrawColor(renderer, 30, 144, 255, 80);
+    SDL_FRect laneD1 = {
+        0,
+        static_cast<float>(CENTER_Y + LANE_WIDTH),
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2),
+        static_cast<float>(LANE_WIDTH)
+    };
+    SDL_RenderFillRect(renderer, &laneD1);
+
+    // D2 - Normal lane (light brown)
+    SDL_SetRenderDrawColor(renderer, 205, 133, 63, 80); // Peru transparent
+    SDL_FRect laneD2 = {
+        0,
+        static_cast<float>(CENTER_Y),
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2),
+        static_cast<float>(LANE_WIDTH)
+    };
+    SDL_RenderFillRect(renderer, &laneD2);
+
+    // D3 - Free lane (green)
+    SDL_SetRenderDrawColor(renderer, 46, 139, 87, 80); // Sea green transparent
+    SDL_FRect laneD3 = {
+        0,
+        static_cast<float>(CENTER_Y - LANE_WIDTH),
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2),
+        static_cast<float>(LANE_WIDTH)
+    };
+    SDL_RenderFillRect(renderer, &laneD3);
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-}
 
-void Renderer::drawCityBlocks() {
-    const int CENTER_X = windowWidth / 2;
-    const int CENTER_Y = windowHeight / 2;
-    const int ROAD_WIDTH = Constants::ROAD_WIDTH;
+    // ---------- STEP 4: DRAW LANE DIVIDERS ----------
+    // Draw the center double-yellow lines
+    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); // Yellow
 
-    // Buildings color palette (dark with subtle variations)
-    SDL_Color buildingColors[] = {
-        {45, 45, 60, 255},  // Dark blue-gray
-        {50, 50, 65, 255},  // Slightly lighter blue-gray
-        {40, 40, 55, 255},  // Darker blue-gray
-        {55, 45, 65, 255},  // Purple-ish blue-gray
-        {45, 55, 65, 255}   // Teal-ish blue-gray
+    // Horizontal center double line
+    SDL_FRect hCenterLine1 = {
+        0, static_cast<float>(CENTER_Y - 1),
+        static_cast<float>(windowWidth), 2.0f
     };
+    SDL_FRect hCenterLine2 = {
+        0, static_cast<float>(CENTER_Y - 5),
+        static_cast<float>(windowWidth), 2.0f
+    };
+    SDL_RenderFillRect(renderer, &hCenterLine1);
+    SDL_RenderFillRect(renderer, &hCenterLine2);
 
-    std::mt19937 rng(123); // Fixed seed for deterministic "random" buildings
-    std::uniform_int_distribution<int> colorDist(0, 4);
-    std::uniform_int_distribution<int> heightDist(30, 120);
-    std::uniform_int_distribution<int> widthDist(30, 100);
-    std::uniform_int_distribution<int> posVariation(5, 20);
+    // Vertical center double line
+    SDL_FRect vCenterLine1 = {
+        static_cast<float>(CENTER_X - 1), 0,
+        2.0f, static_cast<float>(windowHeight)
+    };
+    SDL_FRect vCenterLine2 = {
+        static_cast<float>(CENTER_X - 5), 0,
+        2.0f, static_cast<float>(windowHeight)
+    };
+    SDL_RenderFillRect(renderer, &vCenterLine1);
+    SDL_RenderFillRect(renderer, &vCenterLine2);
 
-    // Top-left quadrant buildings
-    for (int x = 20; x < CENTER_X - ROAD_WIDTH/2 - 20; x += widthDist(rng)) {
-        for (int y = 20; y < CENTER_Y - ROAD_WIDTH/2 - 20; y += heightDist(rng)) {
-            int width = widthDist(rng);
-            int height = heightDist(rng);
-
-            // Ensure the building doesn't exceed the quadrant
-            if (x + width > CENTER_X - ROAD_WIDTH/2 - 20)
-                width = CENTER_X - ROAD_WIDTH/2 - 20 - x;
-            if (y + height > CENTER_Y - ROAD_WIDTH/2 - 20)
-                height = CENTER_Y - ROAD_WIDTH/2 - 20 - y;
-
-            // Draw building
-            SDL_Color color = buildingColors[colorDist(rng)];
-            SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-            SDL_FRect building = {
-                static_cast<float>(x), static_cast<float>(y),
-                static_cast<float>(width), static_cast<float>(height)
-            };
-            SDL_RenderFillRect(renderer, &building);
-
-            // Draw subtle window lights (some lit, some not)
-            drawBuildingWindows(x, y, width, height);
-        }
-    }
-
-    // Similarly for other quadrants with position adjustments
-    // Top-right quadrant
-    for (int x = CENTER_X + ROAD_WIDTH/2 + 20; x < windowWidth - 20; x += widthDist(rng)) {
-        for (int y = 20; y < CENTER_Y - ROAD_WIDTH/2 - 20; y += heightDist(rng)) {
-            int width = widthDist(rng);
-            int height = heightDist(rng);
-
-            if (x + width > windowWidth - 20)
-                width = windowWidth - 20 - x;
-            if (y + height > CENTER_Y - ROAD_WIDTH/2 - 20)
-                height = CENTER_Y - ROAD_WIDTH/2 - 20 - y;
-
-            SDL_Color color = buildingColors[colorDist(rng)];
-            SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-            SDL_FRect building = {
-                static_cast<float>(x), static_cast<float>(y),
-                static_cast<float>(width), static_cast<float>(height)
-            };
-            SDL_RenderFillRect(renderer, &building);
-
-            drawBuildingWindows(x, y, width, height);
-        }
-    }
-
-    // Bottom-left quadrant
-    for (int x = 20; x < CENTER_X - ROAD_WIDTH/2 - 20; x += widthDist(rng)) {
-        for (int y = CENTER_Y + ROAD_WIDTH/2 + 20; y < windowHeight - 20; y += heightDist(rng)) {
-            int width = widthDist(rng);
-            int height = heightDist(rng);
-
-            if (x + width > CENTER_X - ROAD_WIDTH/2 - 20)
-                width = CENTER_X - ROAD_WIDTH/2 - 20 - x;
-            if (y + height > windowHeight - 20)
-                height = windowHeight - 20 - y;
-
-            SDL_Color color = buildingColors[colorDist(rng)];
-            SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-            SDL_FRect building = {
-                static_cast<float>(x), static_cast<float>(y),
-                static_cast<float>(width), static_cast<float>(height)
-            };
-            SDL_RenderFillRect(renderer, &building);
-
-            drawBuildingWindows(x, y, width, height);
-        }
-    }
-
-    // Bottom-right quadrant
-    for (int x = CENTER_X + ROAD_WIDTH/2 + 20; x < windowWidth - 20; x += widthDist(rng)) {
-        for (int y = CENTER_Y + ROAD_WIDTH/2 + 20; y < windowHeight - 20; y += heightDist(rng)) {
-            int width = widthDist(rng);
-            int height = heightDist(rng);
-
-            if (x + width > windowWidth - 20)
-                width = windowWidth - 20 - x;
-            if (y + height > windowHeight - 20)
-                height = windowHeight - 20 - y;
-
-            SDL_Color color = buildingColors[colorDist(rng)];
-            SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-            SDL_FRect building = {
-                static_cast<float>(x), static_cast<float>(y),
-                static_cast<float>(width), static_cast<float>(height)
-            };
-            SDL_RenderFillRect(renderer, &building);
-
-            drawBuildingWindows(x, y, width, height);
-        }
-    }
-}
-
-void Renderer::drawBuildingWindows(int buildingX, int buildingY, int buildingWidth, int buildingHeight) {
-    std::mt19937 rng(buildingX * buildingY); // Seed based on position for deterministic randomness
-    std::uniform_int_distribution<int> lightDist(0, 10); // Probability of lit windows
-
-    const int windowSize = 4;
-    const int windowMargin = 8;
-
-    for (int x = buildingX + windowMargin; x < buildingX + buildingWidth - windowMargin; x += windowMargin) {
-        for (int y = buildingY + windowMargin; y < buildingY + buildingHeight - windowMargin; y += windowMargin) {
-            if (lightDist(rng) < 3) { // 30% chance of lit window
-                // Lit window (yellow-ish glow)
-                SDL_SetRenderDrawColor(renderer, 255, 240, 150, 200);
-            } else {
-                // Dark window
-                SDL_SetRenderDrawColor(renderer, 60, 60, 75, 150);
-            }
-
-            SDL_FRect window = {
-                static_cast<float>(x), static_cast<float>(y),
-                static_cast<float>(windowSize), static_cast<float>(windowSize)
-            };
-            SDL_RenderFillRect(renderer, &window);
-        }
-    }
-}
-
-void Renderer::drawRoadTexture() {
-    const int CENTER_X = windowWidth / 2;
-    const int CENTER_Y = windowHeight / 2;
-    const int ROAD_WIDTH = Constants::ROAD_WIDTH;
-
-    // Draw subtle dark pattern for road texture
-    SDL_SetRenderDrawColor(renderer, 35, 35, 40, 30); // Very subtle dark pattern
-
-    // Horizontal road texture
-    for (int x = 0; x < windowWidth; x += 10) {
-        for (int y = CENTER_Y - ROAD_WIDTH/2; y < CENTER_Y + ROAD_WIDTH/2; y += 10) {
-            if ((x + y) % 20 == 0) {
-                SDL_FRect speck = {
-                    static_cast<float>(x), static_cast<float>(y),
-                    2.0f, 2.0f
-                };
-                SDL_RenderFillRect(renderer, &speck);
-            }
-        }
-    }
-
-    // Vertical road texture
-    for (int x = CENTER_X - ROAD_WIDTH/2; x < CENTER_X + ROAD_WIDTH/2; x += 10) {
-        for (int y = 0; y < windowHeight; y += 10) {
-            if ((x + y) % 20 == 0) {
-                SDL_FRect speck = {
-                    static_cast<float>(x), static_cast<float>(y),
-                    2.0f, 2.0f
-                };
-                SDL_RenderFillRect(renderer, &speck);
-            }
-        }
-    }
-}
-
-void Renderer::drawLaneDividers() {
-    const int CENTER_X = windowWidth / 2;
-    const int CENTER_Y = windowHeight / 2;
-    const int ROAD_WIDTH = Constants::ROAD_WIDTH;
-    const int LANE_WIDTH = Constants::LANE_WIDTH;
+    // Draw white lane dividers (dashed lines)
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
     // Horizontal lane dividers
     for (int i = 1; i < 3; i++) {
-        float y = CENTER_Y - ROAD_WIDTH/2 + i * LANE_WIDTH;
+        if (i == 1) continue; // Skip the center line (already drawn as yellow)
 
-        if (i == 1) {
-            // Center yellow double line with glow effect
-            // First, draw a subtle glow
-            SDL_SetRenderDrawColor(renderer, 255, 220, 100, 30); // Yellow glow
-            SDL_FRect yellowGlow = {
-                0, y - 4.0f,
-                static_cast<float>(windowWidth), 8.0f
-            };
-            SDL_RenderFillRect(renderer, &yellowGlow);
+        float y1 = CENTER_Y - ROAD_WIDTH/2 + i * LANE_WIDTH;
+        float y2 = CENTER_Y + i * LANE_WIDTH;
 
-            // Then draw the actual double yellow line
-            SDL_SetRenderDrawColor(renderer, 255, 220, 0, 255); // Bright yellow
-            SDL_FRect yellowLine1 = {
-                0, y - 2.0f,
-                static_cast<float>(windowWidth), 1.5f
-            };
-            SDL_FRect yellowLine2 = {
-                0, y + 0.5f,
-                static_cast<float>(windowWidth), 1.5f
-            };
-            SDL_RenderFillRect(renderer, &yellowLine1);
-            SDL_RenderFillRect(renderer, &yellowLine2);
-        } else {
-            // White dashed lines with subtle glow
-            for (int x = 0; x < windowWidth; x += 40) {
-                // Skip intersection area
-                if (x >= CENTER_X - ROAD_WIDTH/2 - 10 && x <= CENTER_X + ROAD_WIDTH/2 + 10)
-                    continue;
+        // Top road lanes (going down)
+        for (int x = 0; x < CENTER_X - ROAD_WIDTH/2; x += 30) {
+            SDL_RenderLine(renderer, x, y1, x + 15, y1);
+        }
 
-                // Glow
-                SDL_SetRenderDrawColor(renderer, 220, 220, 255, 30); // White-blue glow
-                SDL_FRect whiteGlow = {
-                    static_cast<float>(x), y - 2.0f,
-                    25.0f, 4.0f
-                };
-                SDL_RenderFillRect(renderer, &whiteGlow);
-
-                // Actual line
-                SDL_SetRenderDrawColor(renderer, 220, 220, 255, 255); // Bright white-blue
-                SDL_FRect whiteLine = {
-                    static_cast<float>(x), y - 0.75f,
-                    25.0f, 1.5f
-                };
-                SDL_RenderFillRect(renderer, &whiteLine);
-            }
+        // Bottom road lanes (going up)
+        for (int x = CENTER_X + ROAD_WIDTH/2; x < windowWidth; x += 30) {
+            SDL_RenderLine(renderer, x, y2, x + 15, y2);
         }
     }
 
     // Vertical lane dividers
     for (int i = 1; i < 3; i++) {
-        float x = CENTER_X - ROAD_WIDTH/2 + i * LANE_WIDTH;
+        if (i == 1) continue; // Skip the center line
 
-        if (i == 1) {
-            // Center yellow double line with glow
-            SDL_SetRenderDrawColor(renderer, 255, 220, 100, 30); // Yellow glow
-            SDL_FRect yellowGlow = {
-                x - 4.0f, 0,
-                8.0f, static_cast<float>(windowHeight)
-            };
-            SDL_RenderFillRect(renderer, &yellowGlow);
+        float x1 = CENTER_X - ROAD_WIDTH/2 + i * LANE_WIDTH;
+        float x2 = CENTER_X + i * LANE_WIDTH;
 
-            // Actual yellow lines
-            SDL_SetRenderDrawColor(renderer, 255, 220, 0, 255); // Bright yellow
-            SDL_FRect yellowLine1 = {
-                x - 2.0f, 0,
-                1.5f, static_cast<float>(windowHeight)
-            };
-            SDL_FRect yellowLine2 = {
-                x + 0.5f, 0,
-                1.5f, static_cast<float>(windowHeight)
-            };
-            SDL_RenderFillRect(renderer, &yellowLine1);
-            SDL_RenderFillRect(renderer, &yellowLine2);
-        } else {
-            // White dashed lines with subtle glow
-            for (int y = 0; y < windowHeight; y += 40) {
-                // Skip intersection area
-                if (y >= CENTER_Y - ROAD_WIDTH/2 - 10 && y <= CENTER_Y + ROAD_WIDTH/2 + 10)
-                    continue;
-
-                // Glow
-                SDL_SetRenderDrawColor(renderer, 220, 220, 255, 30); // White-blue glow
-                SDL_FRect whiteGlow = {
-                    x - 2.0f, static_cast<float>(y),
-                    4.0f, 25.0f
-                };
-                SDL_RenderFillRect(renderer, &whiteGlow);
-
-                // Actual line
-                SDL_SetRenderDrawColor(renderer, 220, 220, 255, 255); // Bright white-blue
-                SDL_FRect whiteLine = {
-                    x - 0.75f, static_cast<float>(y),
-                    1.5f, 25.0f
-                };
-                SDL_RenderFillRect(renderer, &whiteLine);
-            }
-        }
-    }
-}
-
-void Renderer::drawLaneIndicators() {
-    const int CENTER_X = windowWidth / 2;
-    const int CENTER_Y = windowHeight / 2;
-    const int ROAD_WIDTH = Constants::ROAD_WIDTH;
-    const int LANE_WIDTH = Constants::LANE_WIDTH;
-
-    // Lane markers for each lane type
-
-    // --- A1 Lane Indicator (North, Incoming) ---
-    drawLaneMarker(CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH/2,
-                  CENTER_Y - ROAD_WIDTH/2 - 30,
-                  "A1", {100, 150, 255, 200}, true);
-
-    // --- A2 Lane Indicator (North, Priority) ---
-    drawLaneMarker(CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH + LANE_WIDTH/2,
-                  CENTER_Y - ROAD_WIDTH/2 - 30,
-                  "A2", {255, 140, 0, 200}, true);
-
-    // --- A3 Lane Indicator (North, Free) ---
-    drawLaneMarker(CENTER_X - ROAD_WIDTH/2 + 2*LANE_WIDTH + LANE_WIDTH/2,
-                  CENTER_Y - ROAD_WIDTH/2 - 30,
-                  "A3", {50, 205, 50, 200}, true);
-
-    // --- B1 Lane Indicator (East, Incoming) ---
-    drawLaneMarker(CENTER_X + ROAD_WIDTH/2 + 30,
-                  CENTER_Y - ROAD_WIDTH/2 + LANE_WIDTH/2,
-                  "B1", {100, 150, 255, 200}, false);
-
-    // --- B2 Lane Indicator (East, Normal) ---
-    drawLaneMarker(CENTER_X + ROAD_WIDTH/2 + 30,
-                  CENTER_Y - ROAD_WIDTH/2 + LANE_WIDTH + LANE_WIDTH/2,
-                  "B2", {218, 165, 32, 200}, false);
-
-    // --- B3 Lane Indicator (East, Free) ---
-    drawLaneMarker(CENTER_X + ROAD_WIDTH/2 + 30,
-                  CENTER_Y - ROAD_WIDTH/2 + 2*LANE_WIDTH + LANE_WIDTH/2,
-                  "B3", {50, 205, 50, 200}, false);
-
-    // --- C1 Lane Indicator (South, Incoming) ---
-    drawLaneMarker(CENTER_X + LANE_WIDTH/2,
-                  CENTER_Y + ROAD_WIDTH/2 + 30,
-                  "C1", {100, 150, 255, 200}, true);
-
-    // --- C2 Lane Indicator (South, Normal) ---
-    drawLaneMarker(CENTER_X - LANE_WIDTH/2,
-                  CENTER_Y + ROAD_WIDTH/2 + 30,
-                  "C2", {210, 105, 30, 200}, true);
-
-    // --- C3 Lane Indicator (South, Free) ---
-    drawLaneMarker(CENTER_X - 3*LANE_WIDTH/2,
-                  CENTER_Y + ROAD_WIDTH/2 + 30,
-                  "C3", {50, 205, 50, 200}, true);
-
-    // --- D1 Lane Indicator (West, Incoming) ---
-    drawLaneMarker(CENTER_X - ROAD_WIDTH/2 - 30,
-                  CENTER_Y + LANE_WIDTH/2,
-                  "D1", {100, 150, 255, 200}, false);
-
-    // --- D2 Lane Indicator (West, Normal) ---
-    drawLaneMarker(CENTER_X - ROAD_WIDTH/2 - 30,
-                  CENTER_Y - LANE_WIDTH/2,
-                  "D2", {205, 133, 63, 200}, false);
-
-    // --- D3 Lane Indicator (West, Free) ---
-    drawLaneMarker(CENTER_X - ROAD_WIDTH/2 - 30,
-                  CENTER_Y - 3*LANE_WIDTH/2,
-                  "D3", {50, 205, 50, 200}, false);
-}
-
-void Renderer::drawLaneMarker(int x, int y, const std::string& label, SDL_Color color, bool isVertical) {
-    const int MARKER_WIDTH = isVertical ? 30 : 20;
-    const int MARKER_HEIGHT = isVertical ? 20 : 30;
-
-    // Draw hexagonal background
-    const int HEX_SIDES = 6;
-    const float HEX_RADIUS = isVertical ? MARKER_WIDTH/2.0f + 2.0f : MARKER_HEIGHT/2.0f + 2.0f;
-
-    // Create polygon points for hexagon
-    SDL_FPoint hexPoints[HEX_SIDES + 1];
-    for (int i = 0; i < HEX_SIDES; i++) {
-        float angle = 2.0f * M_PI * i / HEX_SIDES - M_PI/2.0f;
-        hexPoints[i].x = x + HEX_RADIUS * cos(angle);
-        hexPoints[i].y = y + HEX_RADIUS * sin(angle);
-    }
-    // Close the polygon
-    hexPoints[HEX_SIDES] = hexPoints[0];
-
-    // Draw hexagon with glow effect
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 50); // Transparent glow
-    for (int i = 1; i <= 5; i++) {
-        float scale = 1.0f + i * 0.08f;
-        SDL_FPoint scaledPoints[HEX_SIDES + 1];
-
-        for (int j = 0; j < HEX_SIDES + 1; j++) {
-            scaledPoints[j].x = x + (hexPoints[j].x - x) * scale;
-            scaledPoints[j].y = y + (hexPoints[j].y - y) * scale;
+        // Left road lanes (going right)
+        for (int y = 0; y < CENTER_Y - ROAD_WIDTH/2; y += 30) {
+            SDL_RenderLine(renderer, x1, y, x1, y + 15);
         }
 
-        for (int j = 0; j < HEX_SIDES; j++) {
-            SDL_RenderLine(renderer,
-                          scaledPoints[j].x, scaledPoints[j].y,
-                          scaledPoints[j+1].x, scaledPoints[j+1].y);
+        // Right road lanes (going left)
+        for (int y = CENTER_Y + ROAD_WIDTH/2; y < windowHeight; y += 30) {
+            SDL_RenderLine(renderer, x2, y, x2, y + 15);
         }
     }
 
-    // Fill hexagon background
-    SDL_SetRenderDrawColor(renderer, color.r/2, color.g/2, color.b/2, 200);
-    for (int i = 0; i < HEX_SIDES - 2; i++) {
-        SDL_RenderLine(renderer, hexPoints[0].x, hexPoints[0].y,
-                      hexPoints[i+1].x, hexPoints[i+1].y);
-        SDL_RenderLine(renderer, hexPoints[0].x, hexPoints[0].y,
-                      hexPoints[i+2].x, hexPoints[i+2].y);
-        SDL_RenderLine(renderer, hexPoints[i+1].x, hexPoints[i+1].y,
-                      hexPoints[i+2].x, hexPoints[i+2].y);
+    // ---------- STEP 5: DRAW DISTINCTIVE LANE IDENTIFIERS ----------
+    // Lane identifiers using shapes and patterns (no text)
+
+    // --- A1 Lane Identifier (North, Incoming) ---
+    SDL_SetRenderDrawColor(renderer, 200, 200, 255, 255); // Light blue
+    SDL_FRect a1Marker = {
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH/2 - 15),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2 - 30),
+        30.0f, 20.0f
+    };
+    SDL_RenderFillRect(renderer, &a1Marker);
+
+    // Blue A1 label - draw a rectangle with "1" in it
+    SDL_SetRenderDrawColor(renderer, 0, 0, 180, 255);
+    // Draw "1" using two lines
+    SDL_RenderLine(renderer,
+        CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH/2, CENTER_Y - ROAD_WIDTH/2 - 25,
+        CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH/2, CENTER_Y - ROAD_WIDTH/2 - 15);
+
+    // --- A2 Lane Identifier (North, Priority) ---
+    // Orange A2 marker (priority lane)
+    SDL_SetRenderDrawColor(renderer, 255, 140, 0, 255);
+    SDL_FRect a2Marker = {
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH + LANE_WIDTH/2 - 15),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2 - 30),
+        30.0f, 20.0f
+    };
+    SDL_RenderFillRect(renderer, &a2Marker);
+
+    // Draw "2" using three lines
+    SDL_SetRenderDrawColor(renderer, 180, 0, 0, 255);
+    SDL_RenderLine(renderer,
+        CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH + LANE_WIDTH/2 - 5, CENTER_Y - ROAD_WIDTH/2 - 25,
+        CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH + LANE_WIDTH/2 + 5, CENTER_Y - ROAD_WIDTH/2 - 25);
+    SDL_RenderLine(renderer,
+        CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH + LANE_WIDTH/2 + 5, CENTER_Y - ROAD_WIDTH/2 - 25,
+        CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH + LANE_WIDTH/2 - 5, CENTER_Y - ROAD_WIDTH/2 - 20);
+    SDL_RenderLine(renderer,
+        CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH + LANE_WIDTH/2 - 5, CENTER_Y - ROAD_WIDTH/2 - 20,
+        CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH + LANE_WIDTH/2 + 5, CENTER_Y - ROAD_WIDTH/2 - 15);
+
+    // A2 Priority indicator (star/asterisk shape)
+    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); // Yellow
+    int px = CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH + LANE_WIDTH/2;
+    int py = CENTER_Y - ROAD_WIDTH/2 - 40;
+    int r = 8; // size
+    for (int i = 0; i < 8; i++) {
+        float angle = i * 3.14159f / 4; // 8 directions
+        SDL_RenderLine(renderer, px, py,
+                      px + r * cos(angle), py + r * sin(angle));
     }
 
-    // Draw hexagon border
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 255);
-    for (int i = 0; i < HEX_SIDES; i++) {
-        SDL_RenderLine(renderer,
-                      hexPoints[i].x, hexPoints[i].y,
-                      hexPoints[i+1].x, hexPoints[i+1].y);
-    }
+    // --- A3 Lane Identifier (North, Free) ---
+    // Green A3 marker (free lane)
+    SDL_SetRenderDrawColor(renderer, 50, 205, 50, 255);
+    SDL_FRect a3Marker = {
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2 + 2*LANE_WIDTH + LANE_WIDTH/2 - 15),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2 - 30),
+        30.0f, 20.0f
+    };
+    SDL_RenderFillRect(renderer, &a3Marker);
 
-    // Draw label using simplified character drawing
+    // Draw "3" using three lines
+    SDL_SetRenderDrawColor(renderer, 0, 100, 0, 255);
+    SDL_RenderLine(renderer,
+        CENTER_X - ROAD_WIDTH/2 + 2*LANE_WIDTH + LANE_WIDTH/2 - 5, CENTER_Y - ROAD_WIDTH/2 - 25,
+        CENTER_X - ROAD_WIDTH/2 + 2*LANE_WIDTH + LANE_WIDTH/2 + 5, CENTER_Y - ROAD_WIDTH/2 - 25);
+    SDL_RenderLine(renderer,
+        CENTER_X - ROAD_WIDTH/2 + 2*LANE_WIDTH + LANE_WIDTH/2 + 5, CENTER_Y - ROAD_WIDTH/2 - 25,
+        CENTER_X - ROAD_WIDTH/2 + 2*LANE_WIDTH + LANE_WIDTH/2 + 5, CENTER_Y - ROAD_WIDTH/2 - 20);
+    SDL_RenderLine(renderer,
+        CENTER_X - ROAD_WIDTH/2 + 2*LANE_WIDTH + LANE_WIDTH/2 - 5, CENTER_Y - ROAD_WIDTH/2 - 20,
+        CENTER_X - ROAD_WIDTH/2 + 2*LANE_WIDTH + LANE_WIDTH/2 + 5, CENTER_Y - ROAD_WIDTH/2 - 15);
+
+    // Free lane indicator (curved left arrow)
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    int fx = CENTER_X - ROAD_WIDTH/2 + 2*LANE_WIDTH + LANE_WIDTH/2;
+    int fy = CENTER_Y - ROAD_WIDTH/2 - 45;
+    // Draw arrow curve using lines approximating an arc
+    for (int i = 0; i < 10; i++) {
+        float angle1 = (i * 0.1f + 0.25f) * M_PI;
+        float angle2 = ((i+1) * 0.1f + 0.25f) * M_PI;
+        SDL_RenderLine(renderer,
+            fx + 12 * cos(angle1), fy + 12 * sin(angle1),
+            fx + 12 * cos(angle2), fy + 12 * sin(angle2));
+    }
+    // Arrow head
+    SDL_RenderLine(renderer, fx, fy - 12, fx - 5, fy - 8);
+    SDL_RenderLine(renderer, fx, fy - 12, fx + 5, fy - 8);
 
-    // Draw first character (A, B, C, or D)
-    float charX = x - 5;
-    float charY = y - 4;
+    // --- B LANE MARKERS (Similar pattern) ---
+    // B1 Lane Identifier (East, Incoming)
+    SDL_SetRenderDrawColor(renderer, 30, 144, 255, 255);
+    SDL_FRect b1Marker = {
+        static_cast<float>(CENTER_X + ROAD_WIDTH/2 + 30),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2 + LANE_WIDTH/2 - 10),
+        20.0f, 20.0f
+    };
+    SDL_RenderFillRect(renderer, &b1Marker);
 
-    char firstChar = label[0];
-    switch (firstChar) {
-        case 'A':
-            SDL_RenderLine(renderer, charX, charY+8, charX+5, charY); // Left diagonal
-            SDL_RenderLine(renderer, charX+5, charY, charX+10, charY+8); // Right diagonal
-            SDL_RenderLine(renderer, charX+2, charY+5, charX+8, charY+5); // Middle bar
-            break;
-        case 'B':
-            SDL_RenderLine(renderer, charX, charY, charX, charY+8); // Vertical
-            SDL_RenderLine(renderer, charX, charY, charX+7, charY); // Top
-            SDL_RenderLine(renderer, charX+7, charY, charX+9, charY+2); // Top curve
-            SDL_RenderLine(renderer, charX+9, charY+2, charX+7, charY+4); // Middle top
-            SDL_RenderLine(renderer, charX, charY+4, charX+7, charY+4); // Middle
-            SDL_RenderLine(renderer, charX+7, charY+4, charX+9, charY+6); // Middle bottom
-            SDL_RenderLine(renderer, charX+9, charY+6, charX+7, charY+8); // Bottom curve
-            SDL_RenderLine(renderer, charX+7, charY+8, charX, charY+8); // Bottom
-            break;
-        case 'C':
-            SDL_RenderLine(renderer, charX+9, charY, charX+2, charY); // Top
-            SDL_RenderLine(renderer, charX+2, charY, charX, charY+2); // Top curve
-            SDL_RenderLine(renderer, charX, charY+2, charX, charY+6); // Left
-            SDL_RenderLine(renderer, charX, charY+6, charX+2, charY+8); // Bottom curve
-            SDL_RenderLine(renderer, charX+2, charY+8, charX+9, charY+8); // Bottom
-            break;
-        case 'D':
-            SDL_RenderLine(renderer, charX, charY, charX, charY+8); // Vertical
-            SDL_RenderLine(renderer, charX, charY, charX+7, charY); // Top
-            SDL_RenderLine(renderer, charX+7, charY, charX+9, charY+2); // Top curve
-            SDL_RenderLine(renderer, charX+9, charY+2, charX+9, charY+6); // Right
-            SDL_RenderLine(renderer, charX+9, charY+6, charX+7, charY+8); // Bottom curve
-            SDL_RenderLine(renderer, charX+7, charY+8, charX, charY+8); // Bottom
-            break;
+    // Draw "B1" inside
+    SDL_SetRenderDrawColor(renderer, 0, 0, 180, 255);
+    // Draw "1"
+    SDL_RenderLine(renderer,
+        CENTER_X + ROAD_WIDTH/2 + 40, CENTER_Y - ROAD_WIDTH/2 + LANE_WIDTH/2 - 5,
+        CENTER_X + ROAD_WIDTH/2 + 40, CENTER_Y - ROAD_WIDTH/2 + LANE_WIDTH/2 + 5);
+
+    // --- C LANE MARKERS ---
+    // C1 Lane Identifier (South, Incoming)
+    SDL_SetRenderDrawColor(renderer, 30, 144, 255, 255);
+    SDL_FRect c1Marker = {
+        static_cast<float>(CENTER_X + LANE_WIDTH + LANE_WIDTH/2 - 15),
+        static_cast<float>(CENTER_Y + ROAD_WIDTH/2 + 10),
+        30.0f, 20.0f
+    };
+    SDL_RenderFillRect(renderer, &c1Marker);
+
+    // Draw "C1" inside
+    SDL_SetRenderDrawColor(renderer, 0, 0, 180, 255);
+    // Draw "1"
+    SDL_RenderLine(renderer,
+        CENTER_X + LANE_WIDTH + LANE_WIDTH/2, CENTER_Y + ROAD_WIDTH/2 + 15,
+        CENTER_X + LANE_WIDTH + LANE_WIDTH/2, CENTER_Y + ROAD_WIDTH/2 + 25);
+
+    // --- D LANE MARKERS ---
+    // D1 Lane Identifier (West, Incoming)
+    SDL_SetRenderDrawColor(renderer, 30, 144, 255, 255);
+    SDL_FRect d1Marker = {
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2 - 50),
+        static_cast<float>(CENTER_Y + LANE_WIDTH + LANE_WIDTH/2 - 10),
+        20.0f, 20.0f
+    };
+    SDL_RenderFillRect(renderer, &d1Marker);
+
+    // Draw "D1" inside
+    SDL_SetRenderDrawColor(renderer, 0, 0, 180, 255);
+    // Draw "1"
+    SDL_RenderLine(renderer,
+        CENTER_X - ROAD_WIDTH/2 - 40, CENTER_Y + LANE_WIDTH + LANE_WIDTH/2 - 5,
+        CENTER_X - ROAD_WIDTH/2 - 40, CENTER_Y + LANE_WIDTH + LANE_WIDTH/2 + 5);
+
+    // ---------- STEP 6: DRAW LARGE ROAD IDENTIFIERS ----------
+    // Draw a large "A" at the top (North Road)
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    int aX = CENTER_X;
+    int aY = 40;
+    int aSize = 30;
+    // Draw "A" using lines
+    SDL_RenderLine(renderer, aX - aSize/2, aY + aSize/2, aX, aY - aSize/2); // Left diagonal
+    SDL_RenderLine(renderer, aX, aY - aSize/2, aX + aSize/2, aY + aSize/2); // Right diagonal
+    SDL_RenderLine(renderer, aX - aSize/4, aY, aX + aSize/4, aY); // Middle bar
+
+    // Draw a large "B" at the right (East Road)
+    int bX = windowWidth - 40;
+    int bY = CENTER_Y;
+    int bSize = 30;
+    // Draw "B" using lines
+    SDL_RenderLine(renderer, bX - bSize/2, bY - bSize/2, bX - bSize/2, bY + bSize/2); // Vertical
+    SDL_RenderLine(renderer, bX - bSize/2, bY - bSize/2, bX + bSize/2, bY - bSize/4); // Top curve
+    SDL_RenderLine(renderer, bX + bSize/2, bY - bSize/4, bX, bY); // Top to middle
+    SDL_RenderLine(renderer, bX, bY, bX + bSize/2, bY + bSize/4); // Middle to bottom
+    SDL_RenderLine(renderer, bX + bSize/2, bY + bSize/4, bX - bSize/2, bY + bSize/2); // Bottom curve
+
+    // Draw a large "C" at the bottom (South Road)
+    int cX = CENTER_X;
+    int cY = windowHeight - 40;
+    int cSize = 30;
+    // Draw "C" using arc approximation with lines
+    for (int i = 0; i < int(cSize/2); i++) {
+        float angle = 0.75f * M_PI - i * M_PI / cSize;
+        float nextAngle = 0.75f * M_PI - (i+1) * M_PI / cSize;
+        SDL_RenderLine(renderer,
+            cX + cSize/2 * cos(angle), cY + cSize/2 * sin(angle),
+            cX + cSize/2 * cos(nextAngle), cY + cSize/2 * sin(nextAngle));
     }
 
-    // Draw second character (1, 2, or 3)
-    charX = x + 1;
-    charY = y - 4;
+    // Draw a large "D" at the left (West Road)
+    int dX = 40;
+    int dY = CENTER_Y;
+    int dSize = 30;
+    // Draw "D" using lines
+    SDL_RenderLine(renderer, dX - dSize/2, dY - dSize/2, dX - dSize/2, dY + dSize/2); // Vertical
+    SDL_RenderLine(renderer, dX - dSize/2, dY - dSize/2, dX + dSize/4, dY - dSize/2); // Top
+    SDL_RenderLine(renderer, dX + dSize/4, dY - dSize/2, dX + dSize/2, dY); // Top curve
+    SDL_RenderLine(renderer, dX + dSize/2, dY, dX + dSize/4, dY + dSize/2); // Bottom curve
+    SDL_RenderLine(renderer, dX + dSize/4, dY + dSize/2, dX - dSize/2, dY + dSize/2); // Bottom
 
-    char secondChar = label[1];
-    switch (secondChar) {
-        case '1':
-            SDL_RenderLine(renderer, charX+4, charY, charX+4, charY+8); // Vertical
-            SDL_RenderLine(renderer, charX+2, charY+2, charX+4, charY); // Top slant
-            SDL_RenderLine(renderer, charX+2, charY+8, charX+6, charY+8); // Base
-            break;
-        case '2':
-            SDL_RenderLine(renderer, charX+1, charY+1, charX+4, charY); // Top left curve
-            SDL_RenderLine(renderer, charX+4, charY, charX+6, charY+1); // Top right curve
-            SDL_RenderLine(renderer, charX+6, charY+1, charX+6, charY+3); // Upper right vertical
-            SDL_RenderLine(renderer, charX+6, charY+3, charX+1, charY+8); // Diagonal
-            SDL_RenderLine(renderer, charX+1, charY+8, charX+7, charY+8); // Bottom
-            break;
-        case '3':
-            SDL_RenderLine(renderer, charX+1, charY, charX+6, charY); // Top
-            SDL_RenderLine(renderer, charX+6, charY, charX+7, charY+2); // Top right curve
-            SDL_RenderLine(renderer, charX+7, charY+2, charX+5, charY+4); // Upper middle
-            SDL_RenderLine(renderer, charX+3, charY+4, charX+5, charY+4); // Middle
-            SDL_RenderLine(renderer, charX+5, charY+4, charX+7, charY+6); // Lower middle
-            SDL_RenderLine(renderer, charX+7, charY+6, charX+6, charY+8); // Bottom right curve
-            SDL_RenderLine(renderer, charX+6, charY+8, charX+1, charY+8); // Bottom
-            break;
-    }
-}
+    // ---------- STEP 7: DRAW LANE FLOW ARROWS ----------
+    // Draw arrows showing vehicle flow direction for each lane
 
-void Renderer::drawCrosswalks() {
-    const int CENTER_X = windowWidth / 2;
-    const int CENTER_Y = windowHeight / 2;
-    const int ROAD_WIDTH = Constants::ROAD_WIDTH;
+    // --- A Lanes Flow (North) ---
+    drawLaneFlowArrow(CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH/2, CENTER_Y - ROAD_WIDTH, Direction::DOWN);
+    drawLaneFlowArrow(CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5, CENTER_Y - ROAD_WIDTH, Direction::DOWN);
+    drawLaneFlowArrow(CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5, CENTER_Y - ROAD_WIDTH, Direction::DOWN);
 
-    // Modern zebra crossing style
-    SDL_SetRenderDrawColor(renderer, 240, 240, 255, 200); // Slight blue-white
+    // --- B Lanes Flow (East) ---
+    drawLaneFlowArrow(CENTER_X + ROAD_WIDTH, CENTER_Y - ROAD_WIDTH/2 + LANE_WIDTH/2, Direction::LEFT);
+    drawLaneFlowArrow(CENTER_X + ROAD_WIDTH, CENTER_Y - ROAD_WIDTH/2 + LANE_WIDTH*1.5, Direction::LEFT);
+    drawLaneFlowArrow(CENTER_X + ROAD_WIDTH, CENTER_Y - ROAD_WIDTH/2 + LANE_WIDTH*2.5, Direction::LEFT);
 
-    // North crosswalk
-    for (int i = 0; i < 9; i++) {
-        SDL_FRect stripe = {
-            static_cast<float>(CENTER_X - ROAD_WIDTH/2 + 2 + i*18),
-            static_cast<float>(CENTER_Y - ROAD_WIDTH/2 - 25),
-            12.0f, 25.0f
-        };
-        SDL_RenderFillRect(renderer, &stripe);
+    // --- C Lanes Flow (South) ---
+    drawLaneFlowArrow(CENTER_X + LANE_WIDTH*1.5, CENTER_Y + ROAD_WIDTH, Direction::UP);
+    drawLaneFlowArrow(CENTER_X + LANE_WIDTH*0.5, CENTER_Y + ROAD_WIDTH, Direction::UP);
+    drawLaneFlowArrow(CENTER_X - LANE_WIDTH*0.5, CENTER_Y + ROAD_WIDTH, Direction::UP);
 
-        // Add subtle glow
-        SDL_SetRenderDrawColor(renderer, 240, 240, 255, 30); // Transparent glow
-        SDL_FRect glow = {
-            stripe.x - 2, stripe.y - 2,
-            stripe.w + 4, stripe.h + 4
-        };
-        SDL_RenderFillRect(renderer, &glow);
+    // --- D Lanes Flow (West) ---
+    drawLaneFlowArrow(CENTER_X - ROAD_WIDTH, CENTER_Y + LANE_WIDTH*1.5, Direction::RIGHT);
+    drawLaneFlowArrow(CENTER_X - ROAD_WIDTH, CENTER_Y + LANE_WIDTH*0.5, Direction::RIGHT);
+    drawLaneFlowArrow(CENTER_X - ROAD_WIDTH, CENTER_Y - LANE_WIDTH*0.5, Direction::RIGHT);
 
-        SDL_SetRenderDrawColor(renderer, 240, 240, 255, 200); // Reset color
-    }
-
-    // South crosswalk
-    for (int i = 0; i < 9; i++) {
-        SDL_FRect stripe = {
-            static_cast<float>(CENTER_X - ROAD_WIDTH/2 + 2 + i*18),
-            static_cast<float>(CENTER_Y + ROAD_WIDTH/2),
-            12.0f, 25.0f
-        };
-        SDL_RenderFillRect(renderer, &stripe);
-
-        // Add subtle glow
-        SDL_SetRenderDrawColor(renderer, 240, 240, 255, 30); // Transparent glow
-        SDL_FRect glow = {
-            stripe.x - 2, stripe.y - 2,
-            stripe.w + 4, stripe.h + 4
-        };
-        SDL_RenderFillRect(renderer, &glow);
-
-        SDL_SetRenderDrawColor(renderer, 240, 240, 255, 200); // Reset color
-    }
-
-    // East crosswalk
-    for (int i = 0; i < 9; i++) {
-        SDL_FRect stripe = {
-            static_cast<float>(CENTER_X + ROAD_WIDTH/2),
-            static_cast<float>(CENTER_Y - ROAD_WIDTH/2 + 2 + i*18),
-            25.0f, 12.0f
-        };
-        SDL_RenderFillRect(renderer, &stripe);
-
-        // Add subtle glow
-        SDL_SetRenderDrawColor(renderer, 240, 240, 255, 30); // Transparent glow
-        SDL_FRect glow = {
-            stripe.x - 2, stripe.y - 2,
-            stripe.w + 4, stripe.h + 4
-        };
-        SDL_RenderFillRect(renderer, &glow);
-
-        SDL_SetRenderDrawColor(renderer, 240, 240, 255, 200); // Reset color
-    }
-
-    // West crosswalk
-    for (int i = 0; i < 9; i++) {
-        SDL_FRect stripe = {
-            static_cast<float>(CENTER_X - ROAD_WIDTH/2 - 25),
-            static_cast<float>(CENTER_Y - ROAD_WIDTH/2 + 2 + i*18),
-            25.0f, 12.0f
-        };
-        SDL_RenderFillRect(renderer, &stripe);
-
-        // Add subtle glow
-        SDL_SetRenderDrawColor(renderer, 240, 240, 255, 30); // Transparent glow
-        SDL_FRect glow = {
-            stripe.x - 2, stripe.y - 2,
-            stripe.w + 4, stripe.h + 4
-        };
-        SDL_RenderFillRect(renderer, &glow);
-
-        SDL_SetRenderDrawColor(renderer, 240, 240, 255, 200); // Reset color
-    }
-}
-
-void Renderer::drawStopLines() {
-    const int CENTER_X = windowWidth / 2;
-    const int CENTER_Y = windowHeight / 2;
-    const int ROAD_WIDTH = Constants::ROAD_WIDTH;
-
-    // Draw stop lines with glow effect
-    SDL_SetRenderDrawColor(renderer, 240, 240, 255, 255); // Bright white-blue
+    // ---------- STEP 8: DRAW STOP LINES ----------
+    // Draw white stop lines at the intersection
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
     // Top stop line (A road)
     SDL_FRect topStop = {
         static_cast<float>(CENTER_X - ROAD_WIDTH/2),
-        static_cast<float>(CENTER_Y - ROAD_WIDTH/2 - 3),
+        static_cast<float>(CENTER_Y - ROAD_WIDTH/2 - 4),
         static_cast<float>(ROAD_WIDTH),
-        3.0f
+        4.0f
     };
     SDL_RenderFillRect(renderer, &topStop);
 
-    // Add glow
-    SDL_SetRenderDrawColor(renderer, 240, 240, 255, 30); // Transparent glow
-    SDL_FRect topGlow = {
-        topStop.x, topStop.y - 3,
-        topStop.w, 9.0f
-    };
-    SDL_RenderFillRect(renderer, &topGlow);
-
     // Bottom stop line (C road)
-    SDL_SetRenderDrawColor(renderer, 240, 240, 255, 255);
     SDL_FRect bottomStop = {
         static_cast<float>(CENTER_X - ROAD_WIDTH/2),
         static_cast<float>(CENTER_Y + ROAD_WIDTH/2),
         static_cast<float>(ROAD_WIDTH),
-        3.0f
+        4.0f
     };
     SDL_RenderFillRect(renderer, &bottomStop);
 
-    // Add glow
-    SDL_SetRenderDrawColor(renderer, 240, 240, 255, 30);
-    SDL_FRect bottomGlow = {
-        bottomStop.x, bottomStop.y - 3,
-        bottomStop.w, 9.0f
-    };
-    SDL_RenderFillRect(renderer, &bottomGlow);
-
     // Left stop line (D road)
-    SDL_SetRenderDrawColor(renderer, 240, 240, 255, 255);
     SDL_FRect leftStop = {
-        static_cast<float>(CENTER_X - ROAD_WIDTH/2 - 3),
+        static_cast<float>(CENTER_X - ROAD_WIDTH/2 - 4),
         static_cast<float>(CENTER_Y - ROAD_WIDTH/2),
-        3.0f,
+        4.0f,
         static_cast<float>(ROAD_WIDTH)
     };
     SDL_RenderFillRect(renderer, &leftStop);
 
-    // Add glow
-    SDL_SetRenderDrawColor(renderer, 240, 240, 255, 30);
-    SDL_FRect leftGlow = {
-        leftStop.x - 3, leftStop.y,
-        9.0f, leftStop.h
-    };
-    SDL_RenderFillRect(renderer, &leftGlow);
-
     // Right stop line (B road)
-    SDL_SetRenderDrawColor(renderer, 240, 240, 255, 255);
     SDL_FRect rightStop = {
         static_cast<float>(CENTER_X + ROAD_WIDTH/2),
         static_cast<float>(CENTER_Y - ROAD_WIDTH/2),
-        3.0f,
+        4.0f,
         static_cast<float>(ROAD_WIDTH)
     };
     SDL_RenderFillRect(renderer, &rightStop);
 
-    // Add glow
-    SDL_SetRenderDrawColor(renderer, 240, 240, 255, 30);
-    SDL_FRect rightGlow = {
-        rightStop.x - 3, rightStop.y,
-        9.0f, rightStop.h
-    };
-    SDL_RenderFillRect(renderer, &rightGlow);
-}
+    // ---------- STEP 9: DRAW LEGEND ----------
+    // Draw a small legend in the corner to explain colors
 
-void Renderer::drawLaneFlowArrow(int x, int y, Direction dir) {
-    // Draw a modern arrow with glow effect
-    const float ARROW_SIZE = 20.0f;
-    const float ARROW_WIDTH = 10.0f;
-
-    // Glow effect (larger, transparent)
-    SDL_SetRenderDrawColor(renderer, 220, 220, 255, 50); // Light blue glow
-
-    // Determine arrow points based on direction
-    SDL_FPoint points[7]; // Arrow polygon
-
-    switch (dir) {
-        case Direction::UP:
-            // Head
-            points[0] = {x, y - ARROW_SIZE};
-            points[1] = {x - ARROW_WIDTH, y - ARROW_SIZE/2};
-            points[2] = {x - ARROW_WIDTH/2, y - ARROW_SIZE/2};
-            // Stem
-            points[3] = {x - ARROW_WIDTH/2, y + ARROW_SIZE/2};
-            points[4] = {x + ARROW_WIDTH/2, y + ARROW_SIZE/2};
-            // Head right
-            points[5] = {x + ARROW_WIDTH/2, y - ARROW_SIZE/2};
-            points[6] = {x + ARROW_WIDTH, y - ARROW_SIZE/2};
-            break;
-        case Direction::DOWN:
-            // Head
-            points[0] = {x, y + ARROW_SIZE};
-            points[1] = {x - ARROW_WIDTH, y + ARROW_SIZE/2};
-            points[2] = {x - ARROW_WIDTH/2, y + ARROW_SIZE/2};
-            // Stem
-            points[3] = {x - ARROW_WIDTH/2, y - ARROW_SIZE/2};
-            points[4] = {x + ARROW_WIDTH/2, y - ARROW_SIZE/2};
-            // Head right
-            points[5] = {x + ARROW_WIDTH/2, y + ARROW_SIZE/2};
-            points[6] = {x + ARROW_WIDTH, y + ARROW_SIZE/2};
-            break;
-        case Direction::LEFT:
-            // Head
-            points[0] = {x - ARROW_SIZE, y};
-            points[1] = {x - ARROW_SIZE/2, y - ARROW_WIDTH};
-            points[2] = {x - ARROW_SIZE/2, y - ARROW_WIDTH/2};
-            // Stem
-            points[3] = {x + ARROW_SIZE/2, y - ARROW_WIDTH/2};
-            points[4] = {x + ARROW_SIZE/2, y + ARROW_WIDTH/2};
-            // Head bottom
-            points[5] = {x - ARROW_SIZE/2, y + ARROW_WIDTH/2};
-            points[6] = {x - ARROW_SIZE/2, y + ARROW_WIDTH};
-            break;
-        case Direction::RIGHT:
-            // Head
-            points[0] = {x + ARROW_SIZE, y};
-            points[1] = {x + ARROW_SIZE/2, y - ARROW_WIDTH};
-            points[2] = {x + ARROW_SIZE/2, y - ARROW_WIDTH/2};
-            // Stem
-            points[3] = {x - ARROW_SIZE/2, y - ARROW_WIDTH/2};
-            points[4] = {x - ARROW_SIZE/2, y + ARROW_WIDTH/2};
-            // Head bottom
-            points[5] = {x + ARROW_SIZE/2, y + ARROW_WIDTH/2};
-            points[6] = {x + ARROW_SIZE/2, y + ARROW_WIDTH};
-            break;
-    }
-
-    // Draw glow - slightly larger version of the arrow
-    for (int i = 0; i < 7; i++) {
-        float scaledX = x + (points[i].x - x) * 1.2f;
-        float scaledY = y + (points[i].y - y) * 1.2f;
-
-        // Connect the glow points
-        int next = (i + 1) % 7;
-        float nextScaledX = x + (points[next].x - x) * 1.2f;
-        float nextScaledY = y + (points[next].y - y) * 1.2f;
-
-        SDL_RenderLine(renderer, scaledX, scaledY, nextScaledX, nextScaledY);
-    }
-
-    // Draw the actual arrow
-    SDL_SetRenderDrawColor(renderer, 220, 220, 255, 200);
-
-    // Create vertices for filled polygon with SDL_FColor for SDL3 compatibility
-    SDL_Vertex vertices[7];
-    SDL_FColor arrowColor = {
-        220.0f/255.0f, 220.0f/255.0f, 255.0f/255.0f, 0.8f
-    };
-
-    // Create triangle fan
-    for (int i = 0; i < 7; i++) {
-        vertices[i].position = points[i];
-        vertices[i].color = arrowColor;
-    }
-
-    // Draw the filled arrow
-    int indices[] = {0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6};
-    SDL_RenderGeometry(renderer, NULL, vertices, 7, indices, 15);
-
-    // Draw outline
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    for (int i = 0; i < 7; i++) {
-        int next = (i + 1) % 7;
-        SDL_RenderLine(renderer, points[i].x, points[i].y, points[next].x, points[next].y);
-    }
-}
-
-void Renderer::drawLaneLabels() {
-    const int CENTER_X = windowWidth / 2;
-    const int CENTER_Y = windowHeight / 2;
-    const int ROAD_WIDTH = Constants::ROAD_WIDTH;
-
-    // Draw road identifiers with glowing neon-style signs
-
-    // Road A (North) Identifier - Blue neon
-    drawNeonSign(CENTER_X, 30, "NORTH", {100, 150, 255, 255}, true);
-
-    // Road B (East) Identifier - Purple neon
-    drawNeonSign(windowWidth - 30, CENTER_Y, "EAST", {180, 100, 255, 255}, false);
-
-    // Road C (South) Identifier - Orange neon
-    drawNeonSign(CENTER_X, windowHeight - 30, "SOUTH", {255, 150, 100, 255}, true);
-
-    // Road D (West) Identifier - Green neon
-    drawNeonSign(30, CENTER_Y, "WEST", {100, 255, 150, 255}, false);
-
-    // Draw lane classification legend in a modern style
-    drawLaneLegend();
-}
-
-void Renderer::drawNeonSign(int x, int y, const std::string& text, SDL_Color color, bool isHorizontal) {
-    // Draw a neon-style sign with text
-    const int SIGN_PADDING = 10;
-    const int SIGN_BORDER = 2;
-    const int CHAR_WIDTH = 12;
-    const int CHAR_HEIGHT = 20;
-
-    // Calculate sign dimensions based on text length
-    int textWidth = text.length() * CHAR_WIDTH;
-    int signWidth = textWidth + 2 * SIGN_PADDING;
-    int signHeight = CHAR_HEIGHT + 2 * SIGN_PADDING;
-
-    float signX = isHorizontal ? x - signWidth/2.0f : x - signHeight/2.0f;
-    float signY = isHorizontal ? y - signHeight/2.0f : y - signWidth/2.0f;
-
-    // Draw outer glow
-    for (int i = 1; i <= 5; i++) {
-        SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 255/(i*3));
-
-        if (isHorizontal) {
-            SDL_FRect glow = {
-                signX - i, signY - i,
-                signWidth + 2*i, signHeight + 2*i
-            };
-            SDL_RenderRect(renderer, &glow);
-        } else {
-            // Rotated 90 degrees for vertical sign
-            SDL_FRect glow = {
-                signX - i, signY - i,
-                signHeight + 2*i, signWidth + 2*i
-            };
-            SDL_RenderRect(renderer, &glow);
-        }
-    }
-
-    // Draw sign background
-    SDL_SetRenderDrawColor(renderer, 20, 20, 30, 200);
-    if (isHorizontal) {
-        SDL_FRect signBg = {
-            signX, signY,
-            signWidth, signHeight
-        };
-        SDL_RenderFillRect(renderer, &signBg);
-    } else {
-        SDL_FRect signBg = {
-            signX, signY,
-            signHeight, signWidth
-        };
-        SDL_RenderFillRect(renderer, &signBg);
-    }
-
-    // Draw neon border
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 255);
-    if (isHorizontal) {
-        SDL_FRect signBorder = {
-            signX, signY,
-            signWidth, signHeight
-        };
-        SDL_RenderRect(renderer, &signBorder);
-    } else {
-        SDL_FRect signBorder = {
-            signX, signY,
-            signHeight, signWidth
-        };
-        SDL_RenderRect(renderer, &signBorder);
-    }
-
-    // Draw text character by character
-    for (size_t i = 0; i < text.length(); i++) {
-        float charX, charY;
-
-        if (isHorizontal) {
-            charX = signX + SIGN_PADDING + i * CHAR_WIDTH;
-            charY = signY + SIGN_PADDING;
-        } else {
-            // Vertical text
-            charX = signX + SIGN_PADDING;
-            charY = signY + SIGN_PADDING + i * CHAR_WIDTH;
-        }
-
-        // Draw character with neon glow
-        drawNeonChar(charX, charY, text[i], color, !isHorizontal);
-    }
-}
-
-void Renderer::drawNeonChar(float x, float y, char c, SDL_Color color, bool isVertical) {
-    const float CHAR_WIDTH = 12.0f;
-    const float CHAR_HEIGHT = 20.0f;
-
-    // Simplified character drawing with neon effect
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 255);
-
-    // Draw character glow
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
-    // Draw different letters with neon style
-    switch (c) {
-        case 'A':
-            // Main lines
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/2, y, x, y+CHAR_HEIGHT); // Left diagonal
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/2, y, x+CHAR_WIDTH, y+CHAR_HEIGHT); // Right diagonal
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/4, y+CHAR_HEIGHT/2, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT/2); // Middle
-            break;
-
-        case 'B':
-            SDL_RenderLine(renderer, x, y, x, y+CHAR_HEIGHT); // Vertical
-            SDL_RenderLine(renderer, x, y, x+3*CHAR_WIDTH/4, y); // Top
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y, x+CHAR_WIDTH, y+CHAR_HEIGHT/4); // Top curve
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y+CHAR_HEIGHT/4, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT/2); // Middle top
-            SDL_RenderLine(renderer, x, y+CHAR_HEIGHT/2, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT/2); // Middle
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT/2, x+CHAR_WIDTH, y+3*CHAR_HEIGHT/4); // Middle bottom
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y+3*CHAR_HEIGHT/4, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT); // Bottom curve
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT, x, y+CHAR_HEIGHT); // Bottom
-            break;
-
-        case 'C':
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y, x+CHAR_WIDTH/4, y); // Top
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/4, y, x, y+CHAR_HEIGHT/4); // Top curve
-            SDL_RenderLine(renderer, x, y+CHAR_HEIGHT/4, x, y+3*CHAR_HEIGHT/4); // Left
-            SDL_RenderLine(renderer, x, y+3*CHAR_HEIGHT/4, x+CHAR_WIDTH/4, y+CHAR_HEIGHT); // Bottom curve
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/4, y+CHAR_HEIGHT, x+CHAR_WIDTH, y+CHAR_HEIGHT); // Bottom
-            break;
-
-        case 'D':
-            SDL_RenderLine(renderer, x, y, x, y+CHAR_HEIGHT); // Vertical
-            SDL_RenderLine(renderer, x, y, x+3*CHAR_WIDTH/4, y); // Top
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y, x+CHAR_WIDTH, y+CHAR_HEIGHT/4); // Top curve
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y+CHAR_HEIGHT/4, x+CHAR_WIDTH, y+3*CHAR_HEIGHT/4); // Right
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y+3*CHAR_HEIGHT/4, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT); // Bottom curve
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT, x, y+CHAR_HEIGHT); // Bottom
-            break;
-
-        case 'E':
-            SDL_RenderLine(renderer, x, y, x, y+CHAR_HEIGHT); // Vertical
-            SDL_RenderLine(renderer, x, y, x+CHAR_WIDTH, y); // Top
-            SDL_RenderLine(renderer, x, y+CHAR_HEIGHT/2, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT/2); // Middle
-            SDL_RenderLine(renderer, x, y+CHAR_HEIGHT, x+CHAR_WIDTH, y+CHAR_HEIGHT); // Bottom
-            break;
-
-        case 'H':
-            SDL_RenderLine(renderer, x, y, x, y+CHAR_HEIGHT); // Left vertical
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y, x+CHAR_WIDTH, y+CHAR_HEIGHT); // Right vertical
-            SDL_RenderLine(renderer, x, y+CHAR_HEIGHT/2, x+CHAR_WIDTH, y+CHAR_HEIGHT/2); // Middle
-            break;
-
-        case 'N':
-            SDL_RenderLine(renderer, x, y, x, y+CHAR_HEIGHT); // Left vertical
-            SDL_RenderLine(renderer, x, y, x+CHAR_WIDTH, y+CHAR_HEIGHT); // Diagonal
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y, x+CHAR_WIDTH, y+CHAR_HEIGHT); // Right vertical
-            break;
-
-        case 'O':
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/4, y, x+3*CHAR_WIDTH/4, y); // Top
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y, x+CHAR_WIDTH, y+CHAR_HEIGHT/4); // Top right
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y+CHAR_HEIGHT/4, x+CHAR_WIDTH, y+3*CHAR_HEIGHT/4); // Right
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y+3*CHAR_HEIGHT/4, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT); // Bottom right
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT, x+CHAR_WIDTH/4, y+CHAR_HEIGHT); // Bottom
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/4, y+CHAR_HEIGHT, x, y+3*CHAR_HEIGHT/4); // Bottom left
-            SDL_RenderLine(renderer, x, y+3*CHAR_HEIGHT/4, x, y+CHAR_HEIGHT/4); // Left
-            SDL_RenderLine(renderer, x, y+CHAR_HEIGHT/4, x+CHAR_WIDTH/4, y); // Top left
-            break;
-
-        case 'R':
-            SDL_RenderLine(renderer, x, y, x, y+CHAR_HEIGHT); // Vertical
-            SDL_RenderLine(renderer, x, y, x+3*CHAR_WIDTH/4, y); // Top
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y, x+CHAR_WIDTH, y+CHAR_HEIGHT/4); // Top curve
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y+CHAR_HEIGHT/4, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT/2); // Middle top
-            SDL_RenderLine(renderer, x, y+CHAR_HEIGHT/2, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT/2); // Middle
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT/2, x+CHAR_WIDTH, y+CHAR_HEIGHT); // Diagonal
-            break;
-
-        case 'S':
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y, x+CHAR_WIDTH/4, y); // Top
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/4, y, x, y+CHAR_HEIGHT/4); // Top curve
-            SDL_RenderLine(renderer, x, y+CHAR_HEIGHT/4, x+CHAR_WIDTH/4, y+CHAR_HEIGHT/2); // Middle top
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/4, y+CHAR_HEIGHT/2, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT/2); // Middle
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT/2, x+CHAR_WIDTH, y+3*CHAR_HEIGHT/4); // Middle bottom
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y+3*CHAR_HEIGHT/4, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT); // Bottom curve
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT, x, y+CHAR_HEIGHT); // Bottom
-            break;
-
-        case 'T':
-            SDL_RenderLine(renderer, x, y, x+CHAR_WIDTH, y); // Top
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/2, y, x+CHAR_WIDTH/2, y+CHAR_HEIGHT); // Vertical
-            break;
-
-        case 'U':
-            SDL_RenderLine(renderer, x, y, x, y+3*CHAR_HEIGHT/4); // Left
-            SDL_RenderLine(renderer, x, y+3*CHAR_HEIGHT/4, x+CHAR_WIDTH/4, y+CHAR_HEIGHT); // Bottom left
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/4, y+CHAR_HEIGHT, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT); // Bottom
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT, x+CHAR_WIDTH, y+3*CHAR_HEIGHT/4); // Bottom right
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y+3*CHAR_HEIGHT/4, x+CHAR_WIDTH, y); // Right
-            break;
-
-        case 'W':
-            SDL_RenderLine(renderer, x, y, x+CHAR_WIDTH/4, y+CHAR_HEIGHT); // Left diagonal
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/4, y+CHAR_HEIGHT, x+CHAR_WIDTH/2, y+CHAR_HEIGHT/2); // Middle left
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/2, y+CHAR_HEIGHT/2, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT); // Middle right
-            SDL_RenderLine(renderer, x+3*CHAR_WIDTH/4, y+CHAR_HEIGHT, x+CHAR_WIDTH, y); // Right diagonal
-            break;
-
-        case 'Y':
-            SDL_RenderLine(renderer, x, y, x+CHAR_WIDTH/2, y+CHAR_HEIGHT/2); // Top left
-            SDL_RenderLine(renderer, x+CHAR_WIDTH, y, x+CHAR_WIDTH/2, y+CHAR_HEIGHT/2); // Top right
-            SDL_RenderLine(renderer, x+CHAR_WIDTH/2, y+CHAR_HEIGHT/2, x+CHAR_WIDTH/2, y+CHAR_HEIGHT); // Bottom
-            break;
-    }
-
-    // Draw glow effect
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 50);
-    for (int i = 1; i <= 3; i++) {
-        SDL_FRect glow = {
-            x - i, y - i,
-            CHAR_WIDTH + 2*i, CHAR_HEIGHT + 2*i
-        };
-        SDL_RenderRect(renderer, &glow);
-    }
-
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-}
-
-void Renderer::drawLaneLegend() {
-    // Draw a modern, minimalist legend in bottom-left corner
-    const int LEGEND_X = 20;
-    const int LEGEND_Y = windowHeight - 140;
-    const int BOX_SIZE = 15;
-    const int SPACING = 25;
-
-    // Draw glass-style background panel with rounded corners
-    SDL_SetRenderDrawColor(renderer, 20, 20, 30, 200);
-    SDL_FRect panel = {
-        static_cast<float>(LEGEND_X - 10),
-        static_cast<float>(LEGEND_Y - 10),
-        140.0f, 130.0f
-    };
-    SDL_RenderFillRect(renderer, &panel);
-
-    // Panel border glow
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(renderer, 100, 100, 150, 50);
-    for (int i = 1; i <= 3; i++) {
-        SDL_FRect glow = {
-            panel.x - i, panel.y - i,
-            panel.w + 2*i, panel.h + 2*i
-        };
-        SDL_RenderRect(renderer, &glow);
-    }
-
-    // Draw panel border
-    SDL_SetRenderDrawColor(renderer, 100, 100, 150, 255);
-    SDL_RenderRect(renderer, &panel);
-
-    // Panel title
-    drawNeonSign(LEGEND_X + 60, LEGEND_Y - 5, "LANES", {180, 180, 255, 255}, true);
+    int legendX = 20;
+    int legendY = windowHeight - 140;
+    int boxSize = 15;
+    int spacing = 25;
 
     // Blue Box - Lane 1 (Incoming)
     SDL_SetRenderDrawColor(renderer, 30, 144, 255, 255);
     SDL_FRect l1Box = {
-        static_cast<float>(LEGEND_X),
-        static_cast<float>(LEGEND_Y + 25),
-        static_cast<float>(BOX_SIZE),
-        static_cast<float>(BOX_SIZE)
+        static_cast<float>(legendX),
+        static_cast<float>(legendY),
+        static_cast<float>(boxSize),
+        static_cast<float>(boxSize)
     };
     SDL_RenderFillRect(renderer, &l1Box);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderRect(renderer, &l1Box);
 
-    // Draw "Incoming" next to box
-    SDL_SetRenderDrawColor(renderer, 200, 200, 255, 255);
-    drawText("Incoming", LEGEND_X + BOX_SIZE + 10, LEGEND_Y + 25, {200, 200, 255, 255});
+    // Draw "L1" next to box
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderLine(renderer, legendX + boxSize + 5, legendY + boxSize/2,
+                  legendX + boxSize + 15, legendY + boxSize/2);
 
     // Orange Box - Lane A2 (Priority)
     SDL_SetRenderDrawColor(renderer, 255, 140, 0, 255);
     SDL_FRect l2Box = {
-        static_cast<float>(LEGEND_X),
-        static_cast<float>(LEGEND_Y + 25 + SPACING),
-        static_cast<float>(BOX_SIZE),
-        static_cast<float>(BOX_SIZE)
+        static_cast<float>(legendX),
+        static_cast<float>(legendY + spacing),
+        static_cast<float>(boxSize),
+        static_cast<float>(boxSize)
     };
     SDL_RenderFillRect(renderer, &l2Box);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderRect(renderer, &l2Box);
 
-    // Draw "Priority" next to box
-    drawText("Priority", LEGEND_X + BOX_SIZE + 10, LEGEND_Y + 25 + SPACING, {255, 200, 100, 255});
+    // Draw "A2" next to box
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderLine(renderer, legendX + boxSize + 5, legendY + spacing + boxSize/2 - 5,
+                  legendX + boxSize + 5, legendY + spacing + boxSize/2 + 5);
+    SDL_RenderLine(renderer, legendX + boxSize + 5, legendY + spacing + boxSize/2 - 5,
+                  legendX + boxSize + 15, legendY + spacing + boxSize/2 - 5);
+    SDL_RenderLine(renderer, legendX + boxSize + 15, legendY + spacing + boxSize/2 - 5,
+                  legendX + boxSize + 15, legendY + spacing + boxSize/2);
+    SDL_RenderLine(renderer, legendX + boxSize + 15, legendY + spacing + boxSize/2,
+                  legendX + boxSize + 5, legendY + spacing + boxSize/2);
+    SDL_RenderLine(renderer, legendX + boxSize + 5, legendY + spacing + boxSize/2,
+                  legendX + boxSize + 15, legendY + spacing + boxSize/2 + 5);
 
     // Green Box - Lane 3 (Free)
     SDL_SetRenderDrawColor(renderer, 50, 205, 50, 255);
     SDL_FRect l3Box = {
-        static_cast<float>(LEGEND_X),
-        static_cast<float>(LEGEND_Y + 25 + 2*SPACING),
-        static_cast<float>(BOX_SIZE),
-        static_cast<float>(BOX_SIZE)
+        static_cast<float>(legendX),
+        static_cast<float>(legendY + 2*spacing),
+        static_cast<float>(boxSize),
+        static_cast<float>(boxSize)
     };
     SDL_RenderFillRect(renderer, &l3Box);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderRect(renderer, &l3Box);
 
-    // Draw "Free Lane" next to box
-    drawText("Free Lane", LEGEND_X + BOX_SIZE + 10, LEGEND_Y + 25 + 2*SPACING, {150, 255, 150, 255});
+    // Draw "L3" next to box
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderLine(renderer, legendX + boxSize + 5, legendY + 2*spacing + boxSize/2 - 5,
+                  legendX + boxSize + 5, legendY + 2*spacing + boxSize/2 + 5);
+    // Draw "3"
+    SDL_RenderLine(renderer, legendX + boxSize + 10, legendY + 2*spacing + boxSize/2 - 5,
+                  legendX + boxSize + 15, legendY + 2*spacing + boxSize/2 - 5);
+    SDL_RenderLine(renderer, legendX + boxSize + 15, legendY + 2*spacing + boxSize/2 - 5,
+                  legendX + boxSize + 15, legendY + 2*spacing + boxSize/2);
+    SDL_RenderLine(renderer, legendX + boxSize + 15, legendY + 2*spacing + boxSize/2,
+                  legendX + boxSize + 10, legendY + 2*spacing + boxSize/2);
+    SDL_RenderLine(renderer, legendX + boxSize + 10, legendY + 2*spacing + boxSize/2,
+                  legendX + boxSize + 15, legendY + 2*spacing + boxSize/2 + 5);
 
     // Yellow Box - Normal Lanes
     SDL_SetRenderDrawColor(renderer, 218, 165, 32, 255);
     SDL_FRect normalBox = {
-        static_cast<float>(LEGEND_X),
-        static_cast<float>(LEGEND_Y + 25 + 3*SPACING),
-        static_cast<float>(BOX_SIZE),
-        static_cast<float>(BOX_SIZE)
+        static_cast<float>(legendX),
+        static_cast<float>(legendY + 3*spacing),
+        static_cast<float>(boxSize),
+        static_cast<float>(boxSize)
     };
     SDL_RenderFillRect(renderer, &normalBox);
+
+    // Draw "L2" next to box
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderRect(renderer, &normalBox);
+    SDL_RenderLine(renderer, legendX + boxSize + 5, legendY + 3*spacing + boxSize/2 - 5,
+                  legendX + boxSize + 5, legendY + 3*spacing + boxSize/2 + 5);
+    // Draw "2"
+    SDL_RenderLine(renderer, legendX + boxSize + 10, legendY + 3*spacing + boxSize/2 - 5,
+                  legendX + boxSize + 15, legendY + 3*spacing + boxSize/2 - 5);
+    SDL_RenderLine(renderer, legendX + boxSize + 15, legendY + 3*spacing + boxSize/2 - 5,
+                  legendX + boxSize + 15, legendY + 3*spacing + boxSize/2);
+    SDL_RenderLine(renderer, legendX + boxSize + 15, legendY + 3*spacing + boxSize/2,
+                  legendX + boxSize + 10, legendY + 3*spacing + boxSize/2);
+    SDL_RenderLine(renderer, legendX + boxSize + 10, legendY + 3*spacing + boxSize/2,
+                  legendX + boxSize + 15, legendY + 3*spacing + boxSize/2 + 5);
+}
 
-    // Draw "Normal" next to box
-    drawText("Normal", LEGEND_X + BOX_SIZE + 10, LEGEND_Y + 25 + 3*SPACING, {255, 220, 150, 255});
 
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+void Renderer::drawLaneFlowArrow(int x, int y, Direction dir) {
+    // Draw a large flow arrow in the lane
+    SDL_SetRenderDrawColor(renderer, 230, 230, 230, 180); // Light gray, semi-transparent
+
+    int arrowSize = 20;
+
+    switch (dir) {
+        case Direction::UP:
+            // Arrow pointing up
+            SDL_RenderLine(renderer, x, y - arrowSize, x - arrowSize/2, y); // Left diagonal
+            SDL_RenderLine(renderer, x, y - arrowSize, x + arrowSize/2, y); // Right diagonal
+            SDL_RenderLine(renderer, x, y - arrowSize, x, y + arrowSize); // Stem
+            break;
+
+        case Direction::DOWN:
+            // Arrow pointing down
+            SDL_RenderLine(renderer, x, y + arrowSize, x - arrowSize/2, y); // Left diagonal
+            SDL_RenderLine(renderer, x, y + arrowSize, x + arrowSize/2, y); // Right diagonal
+            SDL_RenderLine(renderer, x, y - arrowSize, x, y + arrowSize); // Stem
+            break;
+
+        case Direction::LEFT:
+            // Arrow pointing left
+            SDL_RenderLine(renderer, x - arrowSize, y, x, y - arrowSize/2); // Top diagonal
+            SDL_RenderLine(renderer, x - arrowSize, y, x, y + arrowSize/2); // Bottom diagonal
+            SDL_RenderLine(renderer, x - arrowSize, y, x + arrowSize, y); // Stem
+            break;
+
+        case Direction::RIGHT:
+            // Arrow pointing right
+            SDL_RenderLine(renderer, x + arrowSize, y, x, y - arrowSize/2); // Top diagonal
+            SDL_RenderLine(renderer, x + arrowSize, y, x, y + arrowSize/2); // Bottom diagonal
+            SDL_RenderLine(renderer, x - arrowSize, y, x + arrowSize, y); // Stem
+            break;
+    }
+}
+
+
+
+// Helper method to draw direction arrows
+// FILE: src/visualization/Renderer.cpp
+// Implementation of drawDirectionArrow method
+
+// FILE: src/visualization/Renderer.cpp
+// Corrected implementation of drawDirectionArrow method
+
+void Renderer::drawDirectionArrow(int x, int y, Direction dir, SDL_Color color) {
+    SDL_SetRenderDrawColor(this->renderer, color.r, color.g, color.b, color.a);
+
+    const int arrowSize = 12;
+
+    SDL_FPoint points[3];
+
+    switch (dir) {
+        case Direction::UP:
+            points[0] = {static_cast<float>(x), static_cast<float>(y - arrowSize/2)};
+            points[1] = {static_cast<float>(x - arrowSize/2), static_cast<float>(y + arrowSize/2)};
+            points[2] = {static_cast<float>(x + arrowSize/2), static_cast<float>(y + arrowSize/2)};
+            break;
+
+        case Direction::DOWN:
+            points[0] = {static_cast<float>(x), static_cast<float>(y + arrowSize/2)};
+            points[1] = {static_cast<float>(x - arrowSize/2), static_cast<float>(y - arrowSize/2)};
+            points[2] = {static_cast<float>(x + arrowSize/2), static_cast<float>(y - arrowSize/2)};
+            break;
+
+        case Direction::LEFT:
+            points[0] = {static_cast<float>(x - arrowSize/2), static_cast<float>(y)};
+            points[1] = {static_cast<float>(x + arrowSize/2), static_cast<float>(y - arrowSize/2)};
+            points[2] = {static_cast<float>(x + arrowSize/2), static_cast<float>(y + arrowSize/2)};
+            break;
+
+        case Direction::RIGHT:
+            points[0] = {static_cast<float>(x + arrowSize/2), static_cast<float>(y)};
+            points[1] = {static_cast<float>(x - arrowSize/2), static_cast<float>(y - arrowSize/2)};
+            points[2] = {static_cast<float>(x - arrowSize/2), static_cast<float>(y + arrowSize/2)};
+            break;
+    }
+
+    // Draw outline
+    SDL_RenderLine(this->renderer, points[0].x, points[0].y, points[1].x, points[1].y);
+    SDL_RenderLine(this->renderer, points[1].x, points[1].y, points[2].x, points[2].y);
+    SDL_RenderLine(this->renderer, points[2].x, points[2].y, points[0].x, points[0].y);
+
+    // Create SDL vertices for filled triangle
+    SDL_Vertex vertices[3];
+    SDL_FColor fcolor = {
+        static_cast<float>(color.r) / 255.0f,
+        static_cast<float>(color.g) / 255.0f,
+        static_cast<float>(color.b) / 255.0f,
+        static_cast<float>(color.a) / 255.0f
+    };
+
+    // Set vertices
+    for (int i = 0; i < 3; i++) {
+        vertices[i].position = points[i];
+        vertices[i].color = fcolor;
+    }
+
+    // Draw filled triangle
+    SDL_RenderGeometry(this->renderer, NULL, vertices, 3, NULL, 0);
+}
+
+void Renderer::drawLaneLabels() {
+    const int ROAD_WIDTH = Constants::ROAD_WIDTH;
+    const int LANE_WIDTH = Constants::LANE_WIDTH;
+    const int CENTER_X = windowWidth / 2;
+    const int CENTER_Y = windowHeight / 2;
+
+    // Draw road identifiers with large symbols
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+    // Road A (North) Identifier
+    {
+        int x = CENTER_X;
+        int y = 30;
+        int size = 25;
+
+        // Draw "A" using lines
+        SDL_RenderLine(renderer, x - size/2, y + size/2, x, y - size/2); // Left diagonal
+        SDL_RenderLine(renderer, x, y - size/2, x + size/2, y + size/2); // Right diagonal
+        SDL_RenderLine(renderer, x - size/4, y, x + size/4, y); // Middle bar
+
+        // Draw "NORTH" indicator (arrow pointing up)
+        SDL_RenderLine(renderer, x, y + size + 5, x, y + size + 20); // Stem
+        SDL_RenderLine(renderer, x, y + size + 5, x - 5, y + size + 10); // Left arrow
+        SDL_RenderLine(renderer, x, y + size + 5, x + 5, y + size + 10); // Right arrow
+    }
+
+    // Road B (East) Identifier
+    {
+        int x = windowWidth - 30;
+        int y = CENTER_Y;
+        int size = 25;
+
+        // Draw "B" using lines
+        SDL_RenderLine(renderer, x - size/2, y - size/2, x - size/2, y + size/2); // Vertical
+        SDL_RenderLine(renderer, x - size/2, y - size/2, x + size/3, y - size/2); // Top
+        SDL_RenderLine(renderer, x + size/3, y - size/2, x + size/2, y - size/4); // Top curve
+        SDL_RenderLine(renderer, x + size/2, y - size/4, x + size/3, y); // To middle
+        SDL_RenderLine(renderer, x - size/2, y, x + size/3, y); // Middle
+        SDL_RenderLine(renderer, x + size/3, y, x + size/2, y + size/4); // From middle
+        SDL_RenderLine(renderer, x + size/2, y + size/4, x + size/3, y + size/2); // Bottom curve
+        SDL_RenderLine(renderer, x + size/3, y + size/2, x - size/2, y + size/2); // Bottom
+
+        // Draw "EAST" indicator (arrow pointing right)
+        SDL_RenderLine(renderer, x - size - 5, y, x - size - 20, y); // Stem
+        SDL_RenderLine(renderer, x - size - 5, y, x - size - 10, y - 5); // Top arrow
+        SDL_RenderLine(renderer, x - size - 5, y, x - size - 10, y + 5); // Bottom arrow
+    }
+
+    // Road C (South) Identifier
+    {
+        int x = CENTER_X;
+        int y = windowHeight - 30;
+        int size = 25;
+
+        // Draw "C" using lines
+        SDL_RenderLine(renderer, x + size/2, y - size/2, x - size/2, y - size/2); // Top
+        SDL_RenderLine(renderer, x - size/2, y - size/2, x - size/2, y + size/2); // Left
+        SDL_RenderLine(renderer, x - size/2, y + size/2, x + size/2, y + size/2); // Bottom
+
+        // Draw "SOUTH" indicator (arrow pointing down)
+        SDL_RenderLine(renderer, x, y - size - 5, x, y - size - 20); // Stem
+        SDL_RenderLine(renderer, x, y - size - 5, x - 5, y - size - 10); // Left arrow
+        SDL_RenderLine(renderer, x, y - size - 5, x + 5, y - size - 10); // Right arrow
+    }
+
+    // Road D (West) Identifier
+    {
+        int x = 30;
+        int y = CENTER_Y;
+        int size = 25;
+
+        // Draw "D" using lines
+        SDL_RenderLine(renderer, x - size/2, y - size/2, x - size/2, y + size/2); // Vertical
+        SDL_RenderLine(renderer, x - size/2, y - size/2, x + size/4, y - size/2); // Top
+        SDL_RenderLine(renderer, x + size/4, y - size/2, x + size/2, y); // Top curve
+        SDL_RenderLine(renderer, x + size/2, y, x + size/4, y + size/2); // Bottom curve
+        SDL_RenderLine(renderer, x + size/4, y + size/2, x - size/2, y + size/2); // Bottom
+
+        // Draw "WEST" indicator (arrow pointing left)
+        SDL_RenderLine(renderer, x + size + 5, y, x + size + 20, y); // Stem
+        SDL_RenderLine(renderer, x + size + 5, y, x + size + 10, y - 5); // Top arrow
+        SDL_RenderLine(renderer, x + size + 5, y, x + size + 10, y + 5); // Bottom arrow
+    }
+
+    // Draw lane identifiers with distinctive markers
+
+    // A Lanes (North)
+    {
+        // A1 (Incoming) - Blue marker
+        SDL_SetRenderDrawColor(renderer, 30, 144, 255, 255); // Dodger Blue
+        SDL_FRect a1Box = {
+            static_cast<float>(CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*0.5f - 15.0f),
+            static_cast<float>(CENTER_Y - ROAD_WIDTH/2 - 30.0f),
+            30.0f, 20.0f
+        };
+        SDL_RenderFillRect(renderer, &a1Box);
+
+        // Draw "A1" inside
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        // A
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*0.5f - 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*0.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*0.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*0.5f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f);
+        // 1
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*0.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*0.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f);
+
+        // A2 (Priority) - Orange marker
+        SDL_SetRenderDrawColor(renderer, 255, 140, 0, 255); // Orange
+        SDL_FRect a2Box = {
+            static_cast<float>(CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f - 15.0f),
+            static_cast<float>(CENTER_Y - ROAD_WIDTH/2 - 30.0f),
+            30.0f, 20.0f
+        };
+        SDL_RenderFillRect(renderer, &a2Box);
+
+        // Draw "A2" inside
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        // A
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f - 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f);
+        // 2
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 20.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 20.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 20.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 20.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f);
+
+        // Draw "P" for priority (above the marker)
+        SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); // Yellow
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 35.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 45.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 45.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 45.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 45.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 40.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 40.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*1.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 40.0f);
+
+        // A3 (Free) - Green marker
+        SDL_SetRenderDrawColor(renderer, 50, 205, 50, 255); // Lime Green
+        SDL_FRect a3Box = {
+            static_cast<float>(CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f - 15.0f),
+            static_cast<float>(CENTER_Y - ROAD_WIDTH/2 - 30.0f),
+            30.0f, 20.0f
+        };
+        SDL_RenderFillRect(renderer, &a3Box);
+
+        // Draw "A3" inside
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        // A
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f - 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f);
+        // 3
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f + 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f + 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 25.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f + 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 20.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f + 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 20.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 20.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f + 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 20.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f + 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f + 10.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 15.0f);
+
+        // Draw "F" for free (above the marker)
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 35.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 45.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 45.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f + 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 45.0f);
+        SDL_RenderLine(renderer, CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f - 5.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 40.0f,
+                      CENTER_X - ROAD_WIDTH/2 + LANE_WIDTH*2.5f + 2.0f,
+                      CENTER_Y - ROAD_WIDTH/2 - 40.0f);
+    }
+
+    // Similar implementations for B, C, and D lanes...
+    // (abbreviated for brevity)
 }
 
 void Renderer::drawTrafficLights() {
@@ -1380,402 +1179,41 @@ void Renderer::drawVehicles() {
 
         for (Vehicle* vehicle : vehicles) {
             if (vehicle) {
-                // Render vehicle with modern style
-                renderModernVehicle(vehicle, queuePos);
+                vehicle->render(renderer, carTexture, queuePos);
                 queuePos++;
             }
         }
     }
 }
 
-void Renderer::renderModernVehicle(Vehicle* vehicle, int queuePos) {
-    if (!vehicle) return;
-
-    // Create default parameters for vehicle rendering
-    vehicle->render(renderer, carTexture, queuePos);
-
-    // Add additional modern effects
-    float x = vehicle->getTurnPosX();
-    float y = vehicle->getTurnPosY();
-    Direction dir = vehicle->getDestination() == Destination::LEFT ? Direction::LEFT : Direction::STRAIGHT;
-
-    // Add headlight/taillight glow
-    drawVehicleLights(x, y, vehicle->getLaneNumber(), vehicle->getLane(), dir, vehicle->isTurning(), vehicle->getDestination());
-}
-
-void Renderer::drawVehicleLights(float x, float y, int laneNumber, char laneChar,
-                               Direction dir, bool isTurning, Destination destination) {
-    // Draw headlights/taillights glow based on vehicle direction
-    // Get vehicle position and calculate direction based on lane
-
-    // Get heading direction based on lane
-    Direction heading;
-    switch (laneChar) {
-        case 'A': heading = Direction::DOWN; break;  // From North, heading South
-        case 'B': heading = Direction::LEFT; break;  // From East, heading West
-        case 'C': heading = Direction::UP; break;    // From South, heading North
-        case 'D': heading = Direction::RIGHT; break; // From West, heading East
-        default: heading = Direction::DOWN; break;
-    }
-
-    // Calculate light positions relative to vehicle center
-    const float LIGHT_DISTANCE = 10.0f;  // Distance from center to lights
-    const float LIGHT_RADIUS = 4.0f;     // Radius of lights
-
-    // Position of headlights/taillights depends on heading
-    float frontX1, frontY1, frontX2, frontY2; // Front lights (headlights)
-    float backX1, backY1, backX2, backY2;     // Back lights (taillights)
-
-    // Use turn progress for smooth transition during turns
-    float turnFactor = isTurning ? vehicle->getTurnProgress() : 0.0f;
-
-    // Adjust headlight positions based on heading
-    switch (heading) {
-        case Direction::DOWN:
-            // Vehicle moving down
-            frontX1 = x - 6.0f;
-            frontY1 = y + LIGHT_DISTANCE;
-            frontX2 = x + 6.0f;
-            frontY2 = y + LIGHT_DISTANCE;
-
-            backX1 = x - 6.0f;
-            backY1 = y - LIGHT_DISTANCE;
-            backX2 = x + 6.0f;
-            backY2 = y - LIGHT_DISTANCE;
-
-            // Adjust for turning
-            if (isTurning && destination == Destination::LEFT) {
-                // Turning left (towards East for a vehicle going South)
-                float adjustX = turnFactor * LIGHT_DISTANCE;
-                float adjustY = turnFactor * LIGHT_DISTANCE * 0.5f;
-
-                frontX1 += adjustX;
-                frontY1 -= adjustY;
-                frontX2 += adjustX;
-                frontY2 -= adjustY;
-
-                backX1 += adjustX * 0.5f;
-                backY1 -= adjustY * 0.5f;
-                backX2 += adjustX * 0.5f;
-                backY2 -= adjustY * 0.5f;
-            }
-            break;
-
-        case Direction::UP:
-            // Vehicle moving up
-            frontX1 = x - 6.0f;
-            frontY1 = y - LIGHT_DISTANCE;
-            frontX2 = x + 6.0f;
-            frontY2 = y - LIGHT_DISTANCE;
-
-            backX1 = x - 6.0f;
-            backY1 = y + LIGHT_DISTANCE;
-            backX2 = x + 6.0f;
-            backY2 = y + LIGHT_DISTANCE;
-
-            // Adjust for turning
-            if (isTurning && destination == Destination::LEFT) {
-                // Turning left (towards West for a vehicle going North)
-                float adjustX = turnFactor * LIGHT_DISTANCE;
-                float adjustY = turnFactor * LIGHT_DISTANCE * 0.5f;
-
-                frontX1 -= adjustX;
-                frontY1 -= adjustY;
-                frontX2 -= adjustX;
-                frontY2 -= adjustY;
-
-                backX1 -= adjustX * 0.5f;
-                backY1 -= adjustY * 0.5f;
-                backX2 -= adjustX * 0.5f;
-                backY2 -= adjustY * 0.5f;
-            }
-            break;
-
-        case Direction::LEFT:
-            // Vehicle moving left
-            frontX1 = x - LIGHT_DISTANCE;
-            frontY1 = y - 6.0f;
-            frontX2 = x - LIGHT_DISTANCE;
-            frontY2 = y + 6.0f;
-
-            backX1 = x + LIGHT_DISTANCE;
-            backY1 = y - 6.0f;
-            backX2 = x + LIGHT_DISTANCE;
-            backY2 = y + 6.0f;
-
-            // Adjust for turning
-            if (isTurning && destination == Destination::LEFT) {
-                // Turning left (towards South for a vehicle going West)
-                float adjustX = turnFactor * LIGHT_DISTANCE * 0.5f;
-                float adjustY = turnFactor * LIGHT_DISTANCE;
-
-                frontX1 += adjustX;
-                frontY1 += adjustY;
-                frontX2 += adjustX;
-                frontY2 += adjustY;
-
-                backX1 += adjustX * 0.5f;
-                backY1 += adjustY * 0.5f;
-                backX2 += adjustX * 0.5f;
-                backY2 += adjustY * 0.5f;
-            }
-            break;
-
-        case Direction::RIGHT:
-            // Vehicle moving right
-            frontX1 = x + LIGHT_DISTANCE;
-            frontY1 = y - 6.0f;
-            frontX2 = x + LIGHT_DISTANCE;
-            frontY2 = y + 6.0f;
-
-            backX1 = x - LIGHT_DISTANCE;
-            backY1 = y - 6.0f;
-            backX2 = x - LIGHT_DISTANCE;
-            backY2 = y + 6.0f;
-
-            // Adjust for turning
-            if (isTurning && destination == Destination::LEFT) {
-                // Turning left (towards North for a vehicle going East)
-                float adjustX = turnFactor * LIGHT_DISTANCE * 0.5f;
-                float adjustY = turnFactor * LIGHT_DISTANCE;
-
-                frontX1 -= adjustX;
-                frontY1 -= adjustY;
-                frontX2 -= adjustX;
-                frontY2 -= adjustY;
-
-                backX1 -= adjustX * 0.5f;
-                backY1 -= adjustY * 0.5f;
-                backX2 -= adjustX * 0.5f;
-                backY2 -= adjustY * 0.5f;
-            }
-            break;
-    }
-
-    // Draw headlights (front lights) - white/yellow glow
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
-    // Inner bright glow
-    SDL_SetRenderDrawColor(renderer, 255, 255, 220, 200);
-    SDL_FRect headlight1 = {
-        frontX1 - LIGHT_RADIUS/2, frontY1 - LIGHT_RADIUS/2,
-        LIGHT_RADIUS, LIGHT_RADIUS
-    };
-    SDL_RenderFillRect(renderer, &headlight1);
-
-    SDL_FRect headlight2 = {
-        frontX2 - LIGHT_RADIUS/2, frontY2 - LIGHT_RADIUS/2,
-        LIGHT_RADIUS, LIGHT_RADIUS
-    };
-    SDL_RenderFillRect(renderer, &headlight2);
-
-    // Outer headlight glow
-    for (int i = 1; i <= 3; i++) {
-        SDL_SetRenderDrawColor(renderer, 255, 255, 220, 200/(i*2));
-
-        SDL_FRect headGlow1 = {
-            frontX1 - LIGHT_RADIUS/2 - i, frontY1 - LIGHT_RADIUS/2 - i,
-            LIGHT_RADIUS + 2*i, LIGHT_RADIUS + 2*i
-        };
-        SDL_RenderFillRect(renderer, &headGlow1);
-
-        SDL_FRect headGlow2 = {
-            frontX2 - LIGHT_RADIUS/2 - i, frontY2 - LIGHT_RADIUS/2 - i,
-            LIGHT_RADIUS + 2*i, LIGHT_RADIUS + 2*i
-        };
-        SDL_RenderFillRect(renderer, &headGlow2);
-    }
-
-    // Draw taillights (back lights) - red glow
-    SDL_SetRenderDrawColor(renderer, 255, 60, 60, 200);
-    SDL_FRect taillight1 = {
-        backX1 - LIGHT_RADIUS/2, backY1 - LIGHT_RADIUS/2,
-        LIGHT_RADIUS, LIGHT_RADIUS
-    };
-    SDL_RenderFillRect(renderer, &taillight1);
-
-    SDL_FRect taillight2 = {
-        backX2 - LIGHT_RADIUS/2, backY2 - LIGHT_RADIUS/2,
-        LIGHT_RADIUS, LIGHT_RADIUS
-    };
-    SDL_RenderFillRect(renderer, &taillight2);
-
-    // Outer taillight glow
-    for (int i = 1; i <= 2; i++) {
-        SDL_SetRenderDrawColor(renderer, 255, 60, 60, 200/(i*2));
-
-        SDL_FRect tailGlow1 = {
-            backX1 - LIGHT_RADIUS/2 - i, backY1 - LIGHT_RADIUS/2 - i,
-            LIGHT_RADIUS + 2*i, LIGHT_RADIUS + 2*i
-        };
-        SDL_RenderFillRect(renderer, &tailGlow1);
-
-        SDL_FRect tailGlow2 = {
-            backX2 - LIGHT_RADIUS/2 - i, backY2 - LIGHT_RADIUS/2 - i,
-            LIGHT_RADIUS + 2*i, LIGHT_RADIUS + 2*i
-        };
-        SDL_RenderFillRect(renderer, &tailGlow2);
-    }
-
-    // If vehicle is turning left, draw turn signal
-    if (destination == Destination::LEFT) {
-        // Determine blink timing using milliseconds
-        uint32_t time = SDL_GetTicks();
-        bool blinkOn = (time / 500) % 2 == 0; // Blink every 500ms
-
-        if (blinkOn) {
-            // Left turn signal - amber/yellow glow
-            SDL_SetRenderDrawColor(renderer, 255, 180, 0, 200);
-
-            // Position depends on heading direction
-            float turnX, turnY;
-            switch (heading) {
-                case Direction::DOWN:
-                    turnX = x - 8.0f;
-                    turnY = y + LIGHT_DISTANCE;
-                    break;
-                case Direction::UP:
-                    turnX = x + 8.0f;
-                    turnY = y - LIGHT_DISTANCE;
-                    break;
-                case Direction::LEFT:
-                    turnX = x - LIGHT_DISTANCE;
-                    turnY = y + 8.0f;
-                    break;
-                case Direction::RIGHT:
-                    turnX = x + LIGHT_DISTANCE;
-                    turnY = y - 8.0f;
-                    break;
-            }
-
-            // Draw turn signal
-            SDL_FRect turnSignal = {
-                turnX - LIGHT_RADIUS/2, turnY - LIGHT_RADIUS/2,
-                LIGHT_RADIUS, LIGHT_RADIUS
-            };
-            SDL_RenderFillRect(renderer, &turnSignal);
-
-            // Outer turn signal glow
-            for (int i = 1; i <= 3; i++) {
-                SDL_SetRenderDrawColor(renderer, 255, 180, 0, 200/(i*2));
-
-                SDL_FRect turnGlow = {
-                    turnX - LIGHT_RADIUS/2 - i, turnY - LIGHT_RADIUS/2 - i,
-                    LIGHT_RADIUS + 2*i, LIGHT_RADIUS + 2*i
-                };
-                SDL_RenderFillRect(renderer, &turnGlow);
-            }
-        }
-    }
-
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-}
-
 void Renderer::drawDebugOverlay() {
-    // Draw a modern glass-style debug overlay
-
-    // Draw semi-transparent glass panel with glow effect
-    SDL_SetRenderDrawColor(renderer, 20, 25, 40, 200); // Dark blue-ish background
+    // Draw semi-transparent background
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200); // More opaque background
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_FRect overlayRect = {10, 10, 280, 180}; // Larger overlay
+    SDL_RenderFillRect(renderer, &overlayRect);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 
-    // Main panel
-    SDL_FRect panelRect = {
-        static_cast<float>(windowWidth - 310),
-        10.0f,
-        300.0f,
-        180.0f
-    };
-    SDL_RenderFillRect(renderer, &panelRect);
-
-    // Panel highlight (top-left edge glow)
-    SDL_SetRenderDrawColor(renderer, 100, 140, 200, 100);
-    SDL_FRect highlight = {
-        panelRect.x,
-        panelRect.y,
-        panelRect.w,
-        2.0f
-    };
-    SDL_RenderFillRect(renderer, &highlight);
-
-    SDL_FRect highlightSide = {
-        panelRect.x,
-        panelRect.y,
-        2.0f,
-        panelRect.h
-    };
-    SDL_RenderFillRect(renderer, &highlightSide);
-
-    // Panel shadow (bottom-right edge)
-    SDL_SetRenderDrawColor(renderer, 10, 15, 30, 150);
-    SDL_FRect shadow = {
-        panelRect.x,
-        panelRect.y + panelRect.h - 2.0f,
-        panelRect.w,
-        2.0f
-    };
-    SDL_RenderFillRect(renderer, &shadow);
-
-    SDL_FRect shadowSide = {
-        panelRect.x + panelRect.w - 2.0f,
-        panelRect.y,
-        2.0f,
-        panelRect.h
-    };
-    SDL_RenderFillRect(renderer, &shadowSide);
-
-    // Panel border with glow
-    SDL_SetRenderDrawColor(renderer, 100, 140, 200, 255);
-    SDL_RenderRect(renderer, &panelRect);
-
-    // Add outer glow effect
-    for (int i = 1; i <= 3; i++) {
-        SDL_SetRenderDrawColor(renderer, 100, 140, 200, 100/i);
-        SDL_FRect glowRect = {
-            panelRect.x - i,
-            panelRect.y - i,
-            panelRect.w + 2*i,
-            panelRect.h + 2*i
-        };
-        SDL_RenderRect(renderer, &glowRect);
-    }
-
-    // Draw panel title
-    SDL_SetRenderDrawColor(renderer, 220, 240, 255, 255);
-    drawNeonSign(windowWidth - 160, 20, "TRAFFIC STATS", {220, 240, 255, 255}, true);
+    // Add border
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderRect(renderer, &overlayRect);
 
     // Draw statistics
     drawStatistics();
 
-    // Draw keyboard hint at bottom
-    SDL_SetRenderDrawColor(renderer, 180, 200, 255, 200);
-    float keyX = windowWidth - 290;
-    float keyY = panelRect.y + panelRect.h - 30;
+    // Draw title
+    drawText("Traffic Junction Simulator", 20, 20, {255, 255, 255, 255});
+    drawText("Press D to toggle debug overlay", 20, 40, {200, 200, 200, 255});
 
-    // Key background
-    SDL_FRect keyRect = {
-        keyX,
-        keyY,
-        20.0f,
-        20.0f
-    };
-    SDL_RenderFillRect(renderer, &keyRect);
-    SDL_SetRenderDrawColor(renderer, 100, 140, 200, 255);
-    SDL_RenderRect(renderer, &keyRect);
+    // Draw recent logs
+    std::vector<std::string> logs = DebugLogger::getRecentLogs(5);
+    int y = 170;
 
-    // Key letter
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    // Draw 'D'
-    SDL_RenderLine(renderer, keyX + 5, keyY + 4, keyX + 5, keyY + 16); // Vertical
-    SDL_RenderLine(renderer, keyX + 5, keyY + 4, keyX + 12, keyY + 4); // Top
-    SDL_RenderLine(renderer, keyX + 12, keyY + 4, keyX + 15, keyY + 7); // Top curve
-    SDL_RenderLine(renderer, keyX + 15, keyY + 7, keyX + 15, keyY + 13); // Right
-    SDL_RenderLine(renderer, keyX + 15, keyY + 13, keyX + 12, keyY + 16); // Bottom curve
-    SDL_RenderLine(renderer, keyX + 12, keyY + 16, keyX + 5, keyY + 16); // Bottom
-
-    // Key hint text
-    drawText("Toggle debug overlay", keyX + 25, keyY + 3, {220, 240, 255, 255});
-
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    for (const auto& log : logs) {
+        std::string truncatedLog = log.length() > 50 ? log.substr(0, 47) + "..." : log;
+        drawText(truncatedLog, 10, y, {200, 200, 200, 255});
+        y += 20;
+    }
 }
 
 void Renderer::drawStatistics() {
@@ -1783,72 +1221,144 @@ void Renderer::drawStatistics() {
         return;
     }
 
-    // Get statistics from traffic manager with modern layout
+    // Get statistics from traffic manager
     std::string stats = trafficManager->getStatistics();
 
     // Split into lines
     std::istringstream stream(stats);
     std::string line;
-    int y = 50;
+    int y = 60;
 
-    // Draw statistics with modern styling
     while (std::getline(stream, line)) {
-        // Lane statistics in different colors
-        if (line.find("Lane Statistics") != std::string::npos) {
-            // Section header - bright blue
-            drawText(line, windowWidth - 290, y, {160, 200, 255, 255});
+        // Check if line contains priority info
+        if (line.find("PRIORITY") != std::string::npos) {
+            drawText(line, 20, y, {255, 140, 0, 255}); // Highlight priority lanes
+        } else if (line.find("A2") != std::string::npos) {
+            drawText(line, 20, y, {255, 200, 0, 255}); // Highlight A2 lane
+        } else {
+            drawText(line, 20, y, {255, 255, 255, 255});
         }
-        else if (line.find("Total") != std::string::npos) {
-            // Total vehicle count - bright white
-            drawText(line, windowWidth - 290, y, {255, 255, 255, 255});
-        }
-        else if (line.find("A2") != std::string::npos) {
-            // Priority lane A2 - orange with pulsing effect
-            uint32_t time = SDL_GetTicks();
-            int pulse = static_cast<int>(30 * sin(time * 0.003) + 225);
-            drawText(line, windowWidth - 290, y, {255, pulse, 0, 255});
-        }
-        else if (line.find("PRIORITY") != std::string::npos) {
-            // Priority mode active - flashing orange
-            uint32_t time = SDL_GetTicks();
-            bool flash = (time / 500) % 2 == 0;
-            SDL_Color color = flash ? SDL_Color{255, 180, 0, 255} : SDL_Color{255, 120, 0, 255};
-            drawText(line, windowWidth - 290, y, color);
-
-            // Add alert icon
-            drawAlertIcon(windowWidth - 300, y + 8);
-        }
-        else if (line.find("Traffic Light") != std::string::npos) {
-            // Traffic light state with state-specific color
-            SDL_Color stateColor = {255, 255, 255, 255};
-
-            if (line.find("ALL RED") != std::string::npos) {
-                stateColor = {255, 100, 100, 255};
-            } else if (line.find("GREEN") != std::string::npos) {
-                stateColor = {100, 255, 100, 255};
-            }
-
-            drawText(line, windowWidth - 290, y, stateColor);
-        }
-        else {
-            // Default text color - light blue
-            drawText(line, windowWidth - 290, y, {180, 210, 255, 255});
-        }
-
         y += 20;
     }
 
-    // Add current time display
-    std::time_t now = std::time(nullptr);
-    std::tm timeinfo;
-    #ifdef _WIN32
-        localtime_s(&timeinfo, &now);
-    #else
-        localtime_r(&now, &timeinfo);
-    #endif
+    // Show current traffic light state
+    SDL_Color stateColor = {255, 255, 255, 255};
+    std::string stateText = "Traffic Light: ";
 
-    char timeStr[64];
-    std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", &timeinfo);
+    auto* trafficLight = trafficManager->getTrafficLight();
+    if (trafficLight) {
+        auto currentState = trafficLight->getCurrentState();
+        switch (currentState) {
+            case TrafficLight::State::ALL_RED:
+                stateText += "All Red";
+                stateColor = {255, 100, 100, 255};
+                break;
+            case TrafficLight::State::A_GREEN:
+                stateText += "A Green (North)";
+                stateColor = {100, 255, 100, 255};
+                break;
+            case TrafficLight::State::B_GREEN:
+                stateText += "B Green (East)";
+                stateColor = {100, 255, 100, 255};
+                break;
+            case TrafficLight::State::C_GREEN:
+                stateText += "C Green (South)";
+                stateColor = {100, 255, 100, 255};
+                break;
+            case TrafficLight::State::D_GREEN:
+                stateText += "D Green (West)";
+                stateColor = {100, 255, 100, 255};
+                break;
+        }
+    }
 
-    drawText(timeStr, windowWidth - 100, 30, {220, 220, 255, 255});
+    drawText(stateText, 20, y, stateColor);
+}
+
+void Renderer::drawText(const std::string& text, int x, int y, SDL_Color color) {
+    // Since we don't have SDL_ttf configured, draw a colored rectangle
+    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+    SDL_FRect textRect = {static_cast<float>(x), static_cast<float>(y),
+                         static_cast<float>(8 * text.length()), 15};
+
+    // Draw colored rectangle representing text
+    SDL_RenderFillRect(renderer, &textRect);
+
+    // Draw text outline
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderRect(renderer, &textRect);
+}
+
+void Renderer::drawArrow(int x1, int y1, int x2, int y2, int x3, int y3, SDL_Color color) {
+    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+
+    // Draw triangle outline
+    SDL_RenderLine(renderer, x1, y1, x2, y2);
+    SDL_RenderLine(renderer, x2, y2, x3, y3);
+    SDL_RenderLine(renderer, x3, y3, x1, y1);
+
+    // Create vertices for filled triangle with SDL_FColor for SDL3 compatibility
+    SDL_Vertex vertices[3];
+
+    // Convert SDL_Color to SDL_FColor for vertices
+    SDL_FColor fcolor = {
+        static_cast<float>(color.r) / 255.0f,
+        static_cast<float>(color.g) / 255.0f,
+        static_cast<float>(color.b) / 255.0f,
+        static_cast<float>(color.a) / 255.0f
+    };
+
+    // First vertex
+    vertices[0].position.x = x1;
+    vertices[0].position.y = y1;
+    vertices[0].color = fcolor;
+
+    // Second vertex
+    vertices[1].position.x = x2;
+    vertices[1].position.y = y2;
+    vertices[1].color = fcolor;
+
+    // Third vertex
+    vertices[2].position.x = x3;
+    vertices[2].position.y = y3;
+    vertices[2].color = fcolor;
+
+    // Draw the filled triangle
+    SDL_RenderGeometry(renderer, NULL, vertices, 3, NULL, 0);
+}
+
+void Renderer::cleanup() {
+    if (carTexture) {
+        SDL_DestroyTexture(carTexture);
+        carTexture = nullptr;
+    }
+
+    if (renderer) {
+        SDL_DestroyRenderer(renderer);
+        renderer = nullptr;
+    }
+
+    if (window) {
+        SDL_DestroyWindow(window);
+        window = nullptr;
+    }
+
+    DebugLogger::log("Renderer resources cleaned up");
+}
+
+bool Renderer::isActive() const {
+    return active;
+}
+
+void Renderer::toggleDebugOverlay() {
+    showDebugOverlay = !showDebugOverlay;
+    DebugLogger::log("Debug overlay " + std::string(showDebugOverlay ? "enabled" : "disabled"));
+}
+
+void Renderer::setFrameRateLimit(int fps) {
+    frameRateLimit = fps;
+}
+
+void Renderer::setTrafficManager(TrafficManager* manager) {
+    trafficManager = manager;
 }
