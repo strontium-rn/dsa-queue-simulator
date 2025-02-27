@@ -29,7 +29,7 @@ public:
     int getLaneNumber() const;
     std::string getName() const;
 
-    // For iteration through vehicles (for rendering)
+    // For iteration through vehicles 
     const std::vector<Vehicle*>& getVehicles() const;
 
 private:
