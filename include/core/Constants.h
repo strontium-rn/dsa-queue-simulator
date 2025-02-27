@@ -17,7 +17,7 @@ namespace Constants {
     constexpr int LANE_WIDTH = 50;
     constexpr int ARROW_SIZE = 15;
 
-    // Vehicle settings
+    // Vehicle 
     constexpr int MAX_VEHICLE_ID = 9999;
     constexpr float VEHICLE_LENGTH = 12.0f;
     constexpr float VEHICLE_WIDTH = 6.0f;
