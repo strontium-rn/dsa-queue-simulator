@@ -8,7 +8,7 @@
 #include <memory>
 #include <random>
 #include <cmath>
-#include "core/Vehicle.h" // For Direction enum
+#include "core/Vehicle.h" // For Direction enumerator
 
 class Lane;
 class TrafficLight;
