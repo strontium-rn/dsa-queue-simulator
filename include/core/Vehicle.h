@@ -30,7 +30,7 @@ enum class VehicleState {
     EXITED
 };
 
-// Point structure for waypoints
+// Point structure for waypoints vector
 struct Point {
     float x;
     float y;
