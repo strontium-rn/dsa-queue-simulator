@@ -8,7 +8,7 @@
 #include <memory>
 #include <random>
 #include <cmath>
-#include "core/Vehicle.h" // For Direction enumerator
+#include "core/Vehicle.h" // For Direction enum
 
 class Lane;
 class TrafficLight;
@@ -44,7 +44,7 @@ public:
     void setFrameRateLimit(int fps);
 
 private:
-    // SDL components
+    // SDL component
     SDL_Window* window;
     SDL_Renderer* renderer;
     SDL_Texture* carTexture;
