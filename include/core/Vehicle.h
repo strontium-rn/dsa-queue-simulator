@@ -95,7 +95,7 @@ private:
     float turnProgress;
     float turnPosX;
     float turnPosY;
-    int queuePos; // Position in the queue for proper spacing
+    int queuePos; // Position in the queue for proper spacing between cars
 
     // Destination (where the vehicle is heading)
     Destination destination;
