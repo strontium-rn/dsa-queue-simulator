@@ -15,7 +15,7 @@ TrafficLight::TrafficLight()
       forceAGreen(false),
       priorityModeStartTime(0) {
 
-    DebugLogger::log("TrafficLight initialized"); //debudgger
+    DebugLogger::log("TrafficLight initialized"); 
 }
 
 TrafficLight::~TrafficLight() {
