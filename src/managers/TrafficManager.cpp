@@ -44,7 +44,7 @@ bool TrafficManager::initialize() {
         return false;
     }
 
-    // Create lanes for each road and lane number
+    // Create lanes for each road and lane numberr
     for (char road : {'A', 'B', 'C', 'D'}) {
         for (int laneNum = 1; laneNum <= 3; laneNum++) {
             Lane* lane = new Lane(road, laneNum);
