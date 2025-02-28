@@ -36,7 +36,7 @@ private:
     char laneId;               // A, B, C, or D
     int laneNumber;            // 1, 2, or 3
     bool isPriority;           // Is this a priority lane (AL2)
-    int priority;              // Current priority (higher means served first)
+    int priority;              // Current priority (higher means served first) FIFO
     Queue<Vehicle*> vehicleQueue; // Queue for vehicles in the lane
 };
 
