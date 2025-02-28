@@ -29,7 +29,7 @@ std::vector<Vehicle*> FileHandler::readVehiclesFromFiles() {
         return vehicles;
     }
 
-    // Read from each lane file (A, B, C, D)
+    // Read from each lane file (A, B, C, D) with lane ID
     for (char laneId : {'A', 'B', 'C', 'D'}) {
         std::string filePath = getLaneFilePath(laneId);
 
