@@ -17,7 +17,7 @@ A comprehensive simulation system modeling traffic flow at a four-way intersecti
 
 ![Simulation in Action](AaryaPathak.gif)
 
-## 🛣️ Project Synopsis
+## 🛣️ Project Overview
 
 This simulation recreates a realistic traffic intersection where vehicles navigate according to lane-specific rules and traffic signal patterns. The project showcases practical applications of theoretical queue data structures in solving real-world traffic management challenges.
 
@@ -126,7 +126,7 @@ dsa-queue-simulator/
     │   └── Renderer.cpp
     ├── main.cpp            # Simulator main program
     └── traffic_generator.cpp # Traffic generator program
-```
+```bash
 
 ## 📝 Implementation Requirements
 
