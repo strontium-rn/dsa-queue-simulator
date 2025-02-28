@@ -96,8 +96,7 @@ sudo make install
 ```
 dsa-queue-simulator/
 ├── CMakeLists.txt          # CMake build configuration
-├              
-│── AaryaPathak.gif         # Demonstration animation
+├── AaryaPathak.gif         # Demonstration animation
 ├── include/                # Header files
 │   ├── core/               # Core simulation components
 │   │   ├── Constants.h     # Simulation constants
