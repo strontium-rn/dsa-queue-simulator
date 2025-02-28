@@ -126,7 +126,7 @@ dsa-queue-simulator/
     │   └── Renderer.cpp
     ├── main.cpp            # Simulator main program
     └── traffic_generator.cpp # Traffic generator program
-```bash
+```
 
 ## 📝 Implementation Requirements
 
