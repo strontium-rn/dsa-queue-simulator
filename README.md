@@ -93,7 +93,7 @@ sudo make install
 
 ## 📂 Project Structure
 
-```
+```bash
 dsa-queue-simulator/
 ├── CMakeLists.txt          # CMake build configuration
 ├── AaryaPathak.gif         # Demonstration animation
