@@ -1,4 +1,4 @@
-// FILE: include/core/TrafficLight.h this
+// FILE: include/core/TrafficLight.h thisitr
 #ifndef TRAFFIC_LIGHT_H
 #define TRAFFIC_LIGHT_H
 
@@ -44,7 +44,7 @@ private:
     State nextState;
 
     // Timing for the green and red states
-    const int allRedDuration = 2000; // 2 seconds for all red
+    const int allRedDuration = 2000; // 2 seconds for all red light
 
     // Last state change time in milliseconds
     uint32_t lastStateChangeTime;
